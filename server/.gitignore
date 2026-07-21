@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables — NEVER commit secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Uploaded files (user-generated content)
+uploads/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Build output (if applicable)
+dist/
+build/
+
+# Coverage / test artifacts
+coverage/
+.nyc_output/
+
+# Editor & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Optional: lock files (keep package-lock.json for reproducibility)
+# yarn.lock
