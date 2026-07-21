@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-export default function FloatingCore() {
+export default function FloatingCore({ className = "absolute inset-0 z-0 pointer-events-none w-full h-full" }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -9,30 +9,53 @@ export default function FloatingCore() {
     if (!canvas) return;
 
     let animId;
+    let isVisible = true;
     let targetMouseX = 0;
     let targetMouseY = 0;
     let currentMouseX = 0;
     let currentMouseY = 0;
 
+    const getWidth = () => canvas.clientWidth || window.innerWidth;
+    const getHeight = () => canvas.clientHeight || window.innerHeight;
+
+    let width = getWidth();
+    let height = getHeight();
     const isMobile = window.innerWidth < 768;
+
+    // ─── IntersectionObserver to pause rendering off-screen ─
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          isVisible = entry.isIntersecting;
+          if (isVisible && !animId) {
+            animate();
+          }
+        });
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(canvas);
 
     // ─── Scene & Camera ───────────────────────────────────────
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.z = isMobile ? 6.2 : 6.0;
 
-    // On mobile: pull camera WAY back so the whole model fits in portrait
-    camera.position.z = isMobile ? 9.5 : 6.5;
-
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: !isMobile, // Disable MSAA antialiasing on mobile GPU
+      powerPreference: 'high-performance'
+    });
+    renderer.setSize(width, height, false);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.3;
+    renderer.toneMappingExposure = 1.4;
 
     // ─── Lighting ─────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0x0a0507, 2));
+    scene.add(new THREE.AmbientLight(0x0a0507, 2.2));
 
-    const redCoreLight = new THREE.PointLight(0xFF2A3B, 14, 14);
+    const redCoreLight = new THREE.PointLight(0xFF2A3B, 16, 15);
     redCoreLight.position.set(0, 0, 0.5);
     scene.add(redCoreLight);
 
@@ -56,38 +79,34 @@ export default function FloatingCore() {
     const masterGroup = new THREE.Group();
     scene.add(masterGroup);
 
-    // On mobile: shrink model significantly so whole ring fits in portrait width
-    const modelScale = isMobile ? 0.42 : 1;
+    const modelScale = isMobile ? 0.72 : 1.0;
     masterGroup.scale.set(modelScale, modelScale, modelScale);
-
-    // Center model vertically on mobile — slight upward nudge to sit mid-screen
-    masterGroup.position.y = isMobile ? 0.1 : 0;
 
     // ─── Outer Metallic Barrel Ring ───────────────────────────
     const barrelMesh = new THREE.Mesh(
-      new THREE.TorusGeometry(2.3, 0.08, 32, 100),
+      new THREE.TorusGeometry(2.3, 0.09, 16, 48),
       new THREE.MeshStandardMaterial({ color: 0x181820, metalness: 0.92, roughness: 0.12 })
     );
     masterGroup.add(barrelMesh);
 
     // ─── Glowing White Accent Ring ────────────────────────────
     const accentRing = new THREE.Mesh(
-      new THREE.TorusGeometry(2.2, 0.022, 16, 100),
+      new THREE.TorusGeometry(2.2, 0.025, 12, 48),
       new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
     );
     masterGroup.add(accentRing);
 
     // ─── Secondary Inner Ring ─────────────────────────────────
     const innerRing = new THREE.Mesh(
-      new THREE.TorusGeometry(1.65, 0.03, 24, 80),
+      new THREE.TorusGeometry(1.65, 0.035, 16, 40),
       new THREE.MeshStandardMaterial({ color: 0x22222c, metalness: 0.8, roughness: 0.3 })
     );
     masterGroup.add(innerRing);
 
     // ─── Tertiary Thin Ring ───────────────────────────────────
     const thinRing = new THREE.Mesh(
-      new THREE.TorusGeometry(1.95, 0.012, 12, 80),
-      new THREE.MeshBasicMaterial({ color: 0xFF2A3B, transparent: true, opacity: 0.5 })
+      new THREE.TorusGeometry(1.95, 0.015, 12, 40),
+      new THREE.MeshBasicMaterial({ color: 0xFF2A3B, transparent: true, opacity: 0.7 })
     );
     masterGroup.add(thinRing);
 
@@ -102,10 +121,10 @@ export default function FloatingCore() {
     bladeShape.closePath();
 
     const bladeGeo = new THREE.ExtrudeGeometry(bladeShape, {
-      depth: 0.03, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.01, bevelThickness: 0.01
+      depth: 0.03, bevelEnabled: true, bevelSegments: 1, steps: 1, bevelSize: 0.01, bevelThickness: 0.01
     });
     const bladeMat = new THREE.MeshStandardMaterial({ color: 0x0c0c12, metalness: 0.88, roughness: 0.18 });
-    const bladeEdgeMat = new THREE.LineBasicMaterial({ color: 0xFF2A3B, transparent: true, opacity: 0.8 });
+    const bladeEdgeMat = new THREE.LineBasicMaterial({ color: 0xFF2A3B, transparent: true, opacity: 0.85 });
     const edgesGeo = new THREE.EdgesGeometry(bladeGeo);
 
     for (let i = 0; i < numBlades; i++) {
@@ -121,40 +140,45 @@ export default function FloatingCore() {
 
     // ─── Glass Lens Sphere ────────────────────────────────────
     const glassDome = new THREE.Mesh(
-      new THREE.SphereGeometry(1.6, 64, 64),
+      new THREE.SphereGeometry(1.6, 32, 32),
       new THREE.MeshPhysicalMaterial({
-        color: 0xFF2A3B, transparent: true, opacity: 0.28,
-        roughness: 0.04, metalness: 0.1, transmission: 0.92, ior: 1.55
+        color: 0xFF2A3B,
+        transparent: true,
+        opacity: 0.35,
+        roughness: 0.06,
+        metalness: 0.1,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.1
       })
     );
     masterGroup.add(glassDome);
 
     // ─── Inner Glow Core ─────────────────────────────────────
     const innerGlow = new THREE.Mesh(
-      new THREE.SphereGeometry(0.55, 32, 32),
-      new THREE.MeshBasicMaterial({ color: 0xFF2A3B, transparent: true, opacity: 0.55 })
+      new THREE.SphereGeometry(0.58, 24, 24),
+      new THREE.MeshBasicMaterial({ color: 0xFF2A3B, transparent: true, opacity: 0.65 })
     );
     masterGroup.add(innerGlow);
 
     // ─── Anamorphic Lens Flare Sprite ────────────────────────
     const flareCanvas = document.createElement('canvas');
-    flareCanvas.width = 512; flareCanvas.height = 256;
+    flareCanvas.width = 256; flareCanvas.height = 128;
     const fctx = flareCanvas.getContext('2d');
-    const flareGrad = fctx.createRadialGradient(256, 128, 0, 256, 128, 128);
+    const flareGrad = fctx.createRadialGradient(128, 64, 0, 128, 64, 64);
     flareGrad.addColorStop(0, 'rgba(255, 42, 59, 0.95)');
-    flareGrad.addColorStop(0.3, 'rgba(255, 42, 59, 0.28)');
+    flareGrad.addColorStop(0.35, 'rgba(255, 42, 59, 0.28)');
     flareGrad.addColorStop(1, 'rgba(255, 42, 59, 0)');
     fctx.fillStyle = flareGrad;
-    fctx.fillRect(0, 0, 512, 256);
+    fctx.fillRect(0, 0, 256, 128);
 
     const flareSprite = new THREE.Sprite(
       new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(flareCanvas), transparent: true, depthWrite: false })
     );
-    flareSprite.scale.set(isMobile ? 7 : 11, isMobile ? 3.5 : 5.5, 1);
+    flareSprite.scale.set(isMobile ? 8 : 11, isMobile ? 4 : 5.5, 1);
     scene.add(flareSprite);
 
     // ─── Particle Swarm ───────────────────────────────────────
-    const pCount = isMobile ? 200 : 700;
+    const pCount = isMobile ? 180 : 350;
     const positions = new Float32Array(pCount * 3);
     for (let i = 0; i < pCount; i++) {
       const r = 2.2 + Math.random() * 2.2;
@@ -168,7 +192,7 @@ export default function FloatingCore() {
     pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     const particleSys = new THREE.Points(
       pGeo,
-      new THREE.PointsMaterial({ color: 0xFFFFFF, size: isMobile ? 0.025 : 0.02, transparent: true, opacity: 0.6 })
+      new THREE.PointsMaterial({ color: 0xFFFFFF, size: isMobile ? 0.024 : 0.02, transparent: true, opacity: 0.65 })
     );
     scene.add(particleSys);
 
@@ -186,20 +210,27 @@ export default function FloatingCore() {
     };
 
     const handleResize = () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      camera.aspect = w / h;
-      camera.position.z = w < 768 ? 9.5 : 6.5;
+      width = getWidth();
+      height = getHeight();
+      const mob = window.innerWidth < 768;
+      camera.aspect = width / height;
+      camera.position.z = mob ? 6.2 : 6.0;
+      masterGroup.scale.setScalar(mob ? 0.72 : 1.0);
       camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+      renderer.setSize(width, height, false);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
 
     // ─── Animation Loop ───────────────────────────────────────
     const animate = () => {
+      if (!isVisible) {
+        animId = null;
+        return;
+      }
+
       animId = requestAnimationFrame(animate);
       const t = Date.now() * 0.001;
 
@@ -209,19 +240,19 @@ export default function FloatingCore() {
       masterGroup.rotation.y = currentMouseX * 0.35 + Math.sin(t * 0.5) * 0.05;
       masterGroup.rotation.x = -currentMouseY * 0.35 + Math.cos(t * 0.5) * 0.05;
 
-      barrelMesh.rotation.z += 0.001;
-      innerRing.rotation.z  -= 0.002;
-      thinRing.rotation.z   += 0.003;
-      irisGroup.rotation.z  += 0.0015;
+      barrelMesh.rotation.z += 0.0012;
+      innerRing.rotation.z  -= 0.0022;
+      thinRing.rotation.z   += 0.0035;
+      irisGroup.rotation.z  += 0.0018;
 
       const irisPulse = Math.sin(t * 0.9) * 0.07 + 1;
       irisGroup.scale.set(irisPulse, irisPulse, 1);
 
-      const glowPulse = Math.sin(t * 1.4) * 0.1 + 0.9;
+      const glowPulse = Math.sin(t * 1.4) * 0.12 + 0.95;
       innerGlow.scale.setScalar(glowPulse);
-      innerGlow.material.opacity = 0.45 + Math.sin(t * 1.8) * 0.15;
+      innerGlow.material.opacity = 0.5 + Math.sin(t * 1.8) * 0.15;
 
-      redCoreLight.intensity = 12 + Math.sin(t * 2.1) * 3;
+      redCoreLight.intensity = 15 + Math.sin(t * 2.1) * 3;
 
       particleSys.rotation.y -= 0.0008;
 
@@ -231,10 +262,11 @@ export default function FloatingCore() {
     animate();
 
     return () => {
+      observer.disconnect();
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animId);
+      if (animId) cancelAnimationFrame(animId);
       renderer.dispose();
     };
   }, []);
@@ -243,7 +275,8 @@ export default function FloatingCore() {
     <canvas
       ref={canvasRef}
       id="sphere-canvas"
-      className="absolute inset-0 z-0 pointer-events-none w-full h-full"
+      className={className}
     />
   );
 }
+

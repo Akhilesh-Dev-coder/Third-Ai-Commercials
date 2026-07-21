@@ -6,20 +6,20 @@ export default function BackgroundCanvas() {
   useEffect(() => {
     const starCanvas = canvasRef.current;
     if (!starCanvas) return;
-    const sctx = starCanvas.getContext('2d');
+    const sctx = starCanvas.getContext('2d', { alpha: true });
     let stars = [];
     let animId;
 
     function resizeStars() {
       starCanvas.width = window.innerWidth;
-      starCanvas.height = Math.max(document.body.scrollHeight, window.innerHeight);
+      starCanvas.height = window.innerHeight;
       stars = [];
-      const count = window.innerWidth < 768 ? 70 : 160;
+      const count = window.innerWidth < 768 ? 60 : 120;
       for (let i = 0; i < count; i++) {
         stars.push({
           x: Math.random() * starCanvas.width,
           y: Math.random() * starCanvas.height,
-          r: Math.random() * 1.3 + 0.2,
+          r: Math.random() * 1.2 + 0.2,
           s: Math.random() * 0.4 + 0.05,
           o: Math.random() * 0.6 + 0.2
         });
@@ -27,6 +27,7 @@ export default function BackgroundCanvas() {
     }
 
     function drawStars() {
+      if (document.hidden) return;
       sctx.clearRect(0, 0, starCanvas.width, starCanvas.height);
       const t = Date.now() * 0.001;
       stars.forEach((st) => {
@@ -39,14 +40,24 @@ export default function BackgroundCanvas() {
       animId = requestAnimationFrame(drawStars);
     }
 
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (animId) cancelAnimationFrame(animId);
+      } else {
+        animId = requestAnimationFrame(drawStars);
+      }
+    };
+
     resizeStars();
     animId = requestAnimationFrame(drawStars);
 
-    window.addEventListener('resize', resizeStars);
+    window.addEventListener('resize', resizeStars, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('resize', resizeStars);
-      cancelAnimationFrame(animId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (animId) cancelAnimationFrame(animId);
     };
   }, []);
 
@@ -57,3 +68,4 @@ export default function BackgroundCanvas() {
     </>
   );
 }
+

@@ -8,6 +8,12 @@ const testimonialsList = [
     link: "https://www.feloc.in/"
   },
   {
+    quote: "Working on our TVC campaign with Third AI was seamless. Broadcast-ready visuals and top production standards.",
+    author: "MCR Director",
+    role: "MCR Easy Fit Dhoti",
+    link: "#"
+  },
+  {
     quote: "Everyone loves it. Great job. Can't wait to see the other videos.",
     author: "Imraan Assim",
     role: "Eternal Virtue Marketing",
@@ -29,33 +35,44 @@ const testimonialsList = [
 
 export default function ReviewsSection() {
   return (
-    <section className="section" id="reviews">
-      <div className="eyebrow">Client Words</div>
-      <h2 className="big-title text-[clamp(28px,5vw,56px)] mb-8 sm:mb-12">
-        Trusted by ambitious brands.
-      </h2>
+    <section className="py-24 bg-[#0e0e0e] text-white" id="reviews">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
+          <h2 className="font-display font-extrabold text-3xl sm:text-5xl text-white">
+            What Our Clients Say
+          </h2>
+          <p className="text-gray-400 text-base sm:text-xl font-light">
+            Real words from the brands we've grown.
+          </p>
+        </div>
 
-      {/* Snap-scroll horizontal carousel */}
-      <div className="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4 -mx-4 px-4 sm:-mx-0 sm:px-0">
-        {testimonialsList.map((t, idx) => (
-          <div
-            key={idx}
-            className="glass flex-none w-[85vw] sm:w-[min(82vw,620px)] p-7 sm:p-10 snap-center rounded-2xl sm:rounded-[24px] border border-white/10 flex flex-col justify-between"
-          >
-            <div>
-              <div className="text-brand-red font-display text-3xl sm:text-4xl mb-3 sm:mb-4 font-bold">"</div>
-              <p className="font-display font-light text-[clamp(17px,2.6vw,28px)] leading-snug text-white">
-                "{t.quote}"
-              </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {testimonialsList.slice(0, 3).map((t, idx) => (
+            <div
+              key={idx}
+              className="bg-[#131313] border border-[#222] rounded-xl p-7 flex flex-col justify-between relative hover:border-[#ff2751]/50 transition duration-300"
+            >
+              <div>
+                <div className="text-[#ff2751] text-lg tracking-widest mb-4">★★★★★</div>
+                <p className="text-gray-300 text-base italic leading-relaxed mb-6 font-light">
+                  "{t.quote}"
+                </p>
+              </div>
+
+              <div className="space-y-3 pt-4 border-t border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2a2a2a] to-[#141414] border border-[#ff2751] flex items-center justify-center font-bold text-xs text-white">
+                    {t.author.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-white">{t.author}</div>
+                    <div className="text-xs text-gray-400">{t.role}</div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="testi-author mt-6 text-gray-400 text-sm font-mono">
-              <b className="text-white font-semibold">{t.author}</b> —{' '}
-              <a href={t.link} target="_blank" rel="noopener noreferrer" className="text-brand-red hover:underline">
-                {t.role}
-              </a>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </section>
   );
