@@ -1,7 +1,80 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import FloatingCore from '../three/FloatingCore';
 import CanvasErrorBoundary from './CanvasErrorBoundary';
 import { ArrowRight, Radio, Sparkles, Tv, Award, TrendingUp, Star, Video } from 'lucide-react';
+
+function AnimatedCounter({ target, duration = 1800, suffix = "", suffixClassName = "" }) {
+  const [count, setCount] = useState(0);
+  const [isInView, setIsInView] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setIsInView(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isInView) return;
+
+    let startTimestamp = null;
+    const end = parseFloat(target);
+    if (isNaN(end)) {
+      setCount(target);
+      return;
+    }
+
+    const isDecimal = target.toString().includes('.');
+    const decimalPlaces = isDecimal ? target.toString().split('.')[1].length : 0;
+
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      
+      // Easing out quad
+      const easeProgress = progress * (2 - progress);
+      const current = easeProgress * end;
+      
+      setCount(current.toFixed(decimalPlaces));
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        setCount(target);
+      }
+    };
+
+    window.requestAnimationFrame(step);
+  }, [isInView, target, duration]);
+
+  return (
+    <span ref={ref} className="inline-flex items-baseline">
+      {count}
+      {suffix && (
+        <span className={suffixClassName || "text-xl sm:text-3xl font-light text-white ml-0.5"}>
+          {suffix}
+        </span>
+      )}
+    </span>
+  );
+}
 
 export default function HeroSection() {
   const [loaded, setLoaded] = useState(false);
@@ -19,12 +92,12 @@ export default function HeroSection() {
   }, []);
 
   const airedChannels = [
-    { name: 'Asianet News', tag: 'Malayalam News' },
-    { name: 'Manorama News', tag: 'Prime Broadcast' },
-    { name: 'Mathrubhumi', tag: '24/7 Network' },
-    { name: '24 News', tag: 'Breakthrough' },
-    { name: 'MediaOne', tag: 'Statewide' },
-    { name: 'Reporter TV', tag: 'Prime Time' }
+    { name: 'Asianet News', logo: '/images/logos/asianet_news.jpg', tag: 'Malayalam News' },
+    { name: 'Manorama News', logo: '/images/logos/manorama_news.png', tag: 'Prime Broadcast' },
+    { name: 'Mathrubhumi News', logo: '/images/logos/mathrubhumi.png', tag: '24/7 Network' },
+    { name: '24 News', logo: '/images/logos/24_news.png', tag: 'Breakthrough' },
+    { name: 'MediaOne', logo: '/images/logos/media_one.png', tag: 'Statewide' },
+    { name: 'Reporter TV', logo: '/images/logos/reporter_tv.jpg', tag: 'Prime Time' }
   ];
 
   return (
@@ -131,7 +204,7 @@ export default function HeroSection() {
                   key={i}
                   onMouseEnter={() => setActiveChannel(i)}
                   onMouseLeave={() => setActiveChannel(null)}
-                  className={`relative h-16 sm:h-20 rounded-xl sm:rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center p-2.5 sm:p-3 cursor-pointer overflow-hidden ${isHovered
+                  className={`relative h-16 sm:h-20 rounded-xl sm:rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center p-2 sm:p-3 cursor-pointer overflow-hidden ${isHovered
                       ? 'border-[#ff2751] bg-gradient-to-b from-[#ff2751]/20 to-[#0d0d12] shadow-[0_0_25px_rgba(255,39,81,0.35)] -translate-y-1'
                       : 'border-dashed border-[#ff2751]/40 bg-[#ff2751]/[0.03] hover:bg-[#ff2751]/[0.08]'
                     }`}
@@ -140,8 +213,15 @@ export default function HeroSection() {
                     <span className={`w-1.5 h-1.5 rounded-full ${isHovered ? 'bg-[#ff2751] shadow-[0_0_8px_#ff2751]' : 'bg-gray-600'}`} />
                   </div>
 
-                  <div className="font-display font-bold text-gray-200 text-xs sm:text-sm tracking-wide group-hover:text-white">
-                    {channel.name}
+                  <div className="w-full h-full flex items-center justify-center p-1.5">
+                    <img
+                      src={channel.logo}
+                      alt={channel.name}
+                      className={`max-w-full max-h-full object-contain transition-all duration-300 ${isHovered
+                          ? 'opacity-100 scale-105'
+                          : 'opacity-85'
+                        }`}
+                    />
                   </div>
                 </div>
               );
@@ -159,8 +239,8 @@ export default function HeroSection() {
             <div className="flex justify-center mb-1 text-[#ff2751] opacity-80 group-hover:opacity-100 transition">
               <Award className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div className="font-display font-black text-3xl sm:text-6xl text-[#ff2751] tracking-tight">
-              357<span className="text-xl sm:text-3xl font-light text-white">+</span>
+            <div className="font-display font-black text-3xl sm:text-6xl text-[#ff2751] tracking-tight justify-center flex">
+              <AnimatedCounter target="1100" suffix="+" />
             </div>
             <div className="text-[11px] sm:text-sm text-gray-300 font-medium">Projects Delivered</div>
           </div>
@@ -169,8 +249,8 @@ export default function HeroSection() {
             <div className="flex justify-center mb-1 text-[#ff2751] opacity-80 group-hover:opacity-100 transition">
               <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div className="font-display font-black text-3xl sm:text-6xl text-[#ff2751] tracking-tight">
-              28<span className="text-xl sm:text-3xl font-light text-white">+</span>
+            <div className="font-display font-black text-3xl sm:text-6xl text-[#ff2751] tracking-tight justify-center flex">
+              <AnimatedCounter target="750" suffix="+" />
             </div>
             <div className="text-[11px] sm:text-sm text-gray-300 font-medium">Brands Served</div>
           </div>
@@ -179,8 +259,8 @@ export default function HeroSection() {
             <div className="flex justify-center mb-1 text-[#ff2751] opacity-80 group-hover:opacity-100 transition">
               <Tv className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div className="font-display font-black text-3xl sm:text-6xl text-[#ff2751] tracking-tight">
-              1
+            <div className="font-display font-black text-3xl sm:text-6xl text-[#ff2751] tracking-tight justify-center flex">
+              <AnimatedCounter target="9" />
             </div>
             <div className="text-[11px] sm:text-sm text-gray-300 font-medium">TVC On National Broadcast</div>
           </div>
@@ -189,8 +269,8 @@ export default function HeroSection() {
             <div className="flex justify-center mb-1 text-[#ff2751] opacity-80 group-hover:opacity-100 transition">
               <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
             </div>
-            <div className="font-display font-black text-3xl sm:text-6xl text-[#ff2751] tracking-tight">
-              5.0<span className="text-xl sm:text-3xl text-amber-400">★</span>
+            <div className="font-display font-black text-3xl sm:text-6xl text-[#ff2751] tracking-tight justify-center flex">
+              <AnimatedCounter target="5.0" suffix="★" suffixClassName="text-xl sm:text-3xl text-amber-400 ml-0.5" />
             </div>
             <div className="text-[11px] sm:text-sm text-gray-300 font-medium">Average Client Rating</div>
           </div>
