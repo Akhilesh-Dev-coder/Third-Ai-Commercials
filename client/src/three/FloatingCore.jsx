@@ -39,11 +39,11 @@ export default function FloatingCore({ className = "absolute inset-0 z-0 pointer
     const getViewportParams = (w, h) => {
       const aspect = w / h;
       if (aspect < 0.75) {
-        // Mobile portrait viewport: optimal scale for background rotating core behind glass card
-        return { z: 7.0, scale: 0.70, posY: 0.05 };
+        // Mobile portrait viewport: positioned behind the buttons and subtitle
+        return { z: 7.0, scale: 0.60, posY: -0.3 };
       } else if (aspect < 1.0) {
         // Tablet portrait viewport
-        return { z: 6.8, scale: 0.80, posY: 0.05 };
+        return { z: 6.5, scale: 0.75, posY: 1.2 };
       }
       // Desktop / Landscape
       return { z: 6.0, scale: 1.0, posY: 0 };

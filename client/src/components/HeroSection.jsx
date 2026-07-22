@@ -34,7 +34,7 @@ export default function HeroSection() {
       style={{ minHeight: '100svh' }}
     >
       {/* ── 3D Canvas Background (Desktop Full Bleed) ── */}
-      <div className="hidden sm:block absolute inset-0 z-0 pointer-events-none w-full h-full">
+      <div className="absolute inset-x-0 top-0 h-[100svh] sm:h-full z-0 pointer-events-none overflow-hidden">
         <CanvasErrorBoundary>
           <FloatingCore className="w-full h-full pointer-events-none" />
         </CanvasErrorBoundary>
@@ -79,12 +79,7 @@ export default function HeroSection() {
           </span>
         </h1>
 
-        {/* ── Mobile 3D Seamless Interactive Visual Stage ── */}
-        <div className="sm:hidden w-full max-w-[340px] h-[270px] relative my-2 flex items-center justify-center pointer-events-none">
-          <CanvasErrorBoundary>
-            <FloatingCore className="w-full h-full pointer-events-none" />
-          </CanvasErrorBoundary>
-        </div>
+
 
         {/* Subtitle */}
         <p
