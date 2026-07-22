@@ -19,7 +19,7 @@ export default function FloatingCore({ className = "absolute inset-0 z-0 pointer
 
     const isMobile = window.innerWidth < 768;
     const isIOS = typeof navigator !== 'undefined' && (
-      /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     );
 
@@ -36,11 +36,26 @@ export default function FloatingCore({ className = "absolute inset-0 z-0 pointer
     };
     canvas.addEventListener('webglcontextlost', handleContextLost, false);
 
+    const getViewportParams = (w, h) => {
+      const aspect = w / h;
+      if (aspect < 0.75) {
+        // Mobile portrait viewport: optimal scale for background rotating core behind glass card
+        return { z: 7.0, scale: 0.70, posY: 0.05 };
+      } else if (aspect < 1.0) {
+        // Tablet portrait viewport
+        return { z: 6.8, scale: 0.80, posY: 0.05 };
+      }
+      // Desktop / Landscape
+      return { z: 6.0, scale: 1.0, posY: 0 };
+    };
+
+    const initialParams = getViewportParams(width, height);
+
     try {
       // ─── Scene & Camera ───────────────────────────────────────
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-      camera.position.z = isMobile ? 6.2 : 6.0;
+      camera.position.z = initialParams.z;
 
       // Safe WebGL initialization for iOS Safari & Mobile GPUs
       renderer = new THREE.WebGLRenderer({
@@ -53,7 +68,7 @@ export default function FloatingCore({ className = "absolute inset-0 z-0 pointer
 
       renderer.setSize(width, height, false);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile || isIOS ? 1.0 : 1.5));
-      
+
       if (!isIOS) {
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.4;
@@ -86,8 +101,8 @@ export default function FloatingCore({ className = "absolute inset-0 z-0 pointer
       masterGroup = new THREE.Group();
       scene.add(masterGroup);
 
-      const modelScale = isMobile ? 0.72 : 1.0;
-      masterGroup.scale.set(modelScale, modelScale, modelScale);
+      masterGroup.scale.set(initialParams.scale, initialParams.scale, initialParams.scale);
+      masterGroup.position.y = initialParams.posY;
 
       // ─── Outer Metallic Barrel Ring ───────────────────────────
       barrelMesh = new THREE.Mesh(
@@ -155,7 +170,7 @@ export default function FloatingCore({ className = "absolute inset-0 z-0 pointer
           opacity: 0.35,
           roughness: 0.06,
           metalness: 0.1,
-          ...( (!isMobile && !isIOS) ? { clearcoat: 1.0, clearcoatRoughness: 0.1 } : {} )
+          ...((!isMobile && !isIOS) ? { clearcoat: 1.0, clearcoatRoughness: 0.1 } : {})
         })
       );
       masterGroup.add(glassDome);
@@ -197,7 +212,7 @@ export default function FloatingCore({ className = "absolute inset-0 z-0 pointer
         const r = 2.2 + Math.random() * 2.2;
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos(Math.random() * 2 - 1);
-        positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
         positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
         positions[i * 3 + 2] = r * Math.cos(phi);
       }
@@ -246,10 +261,13 @@ export default function FloatingCore({ className = "absolute inset-0 z-0 pointer
       if (!renderer || !camera) return;
       width = getWidth();
       height = getHeight();
-      const mob = window.innerWidth < 768;
+      const params = getViewportParams(width, height);
       camera.aspect = width / height;
-      camera.position.z = mob ? 6.2 : 6.0;
-      if (masterGroup) masterGroup.scale.setScalar(mob ? 0.72 : 1.0);
+      camera.position.z = params.z;
+      if (masterGroup) {
+        masterGroup.scale.setScalar(params.scale);
+        masterGroup.position.y = params.posY;
+      }
       camera.updateProjectionMatrix();
       renderer.setSize(width, height, false);
     };
@@ -277,10 +295,10 @@ export default function FloatingCore({ className = "absolute inset-0 z-0 pointer
       }
 
       if (barrelMesh) barrelMesh.rotation.z += 0.0012;
-      if (innerRing) innerRing.rotation.z  -= 0.0022;
-      if (thinRing) thinRing.rotation.z   += 0.0035;
+      if (innerRing) innerRing.rotation.z -= 0.0022;
+      if (thinRing) thinRing.rotation.z += 0.0035;
       if (irisGroup) {
-        irisGroup.rotation.z  += 0.0018;
+        irisGroup.rotation.z += 0.0018;
         const irisPulse = Math.sin(t * 0.9) * 0.07 + 1;
         irisGroup.scale.set(irisPulse, irisPulse, 1);
       }
