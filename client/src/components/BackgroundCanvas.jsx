@@ -6,15 +6,25 @@ export default function BackgroundCanvas() {
   useEffect(() => {
     const starCanvas = canvasRef.current;
     if (!starCanvas) return;
-    const sctx = starCanvas.getContext('2d', { alpha: true });
+    
+    let sctx;
+    try {
+      sctx = starCanvas.getContext('2d', { alpha: true });
+    } catch (err) {
+      console.warn('BackgroundCanvas 2D context error:', err);
+      return;
+    }
+    if (!sctx) return;
+
     let stars = [];
     let animId;
 
     function resizeStars() {
-      starCanvas.width = window.innerWidth;
-      starCanvas.height = window.innerHeight;
+      if (!starCanvas) return;
+      starCanvas.width = window.innerWidth || 300;
+      starCanvas.height = window.innerHeight || 300;
       stars = [];
-      const count = window.innerWidth < 768 ? 60 : 120;
+      const count = window.innerWidth < 768 ? 50 : 110;
       for (let i = 0; i < count; i++) {
         stars.push({
           x: Math.random() * starCanvas.width,
@@ -27,17 +37,21 @@ export default function BackgroundCanvas() {
     }
 
     function drawStars() {
-      if (document.hidden) return;
-      sctx.clearRect(0, 0, starCanvas.width, starCanvas.height);
-      const t = Date.now() * 0.001;
-      stars.forEach((st) => {
-        const flicker = 0.5 + 0.5 * Math.sin(t * st.s * 3 + st.x);
-        sctx.beginPath();
-        sctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
-        sctx.fillStyle = `rgba(255,255,255,${st.o * flicker})`;
-        sctx.fill();
-      });
-      animId = requestAnimationFrame(drawStars);
+      if (document.hidden || !sctx || !starCanvas) return;
+      try {
+        sctx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+        const t = Date.now() * 0.001;
+        stars.forEach((st) => {
+          const flicker = 0.5 + 0.5 * Math.sin(t * st.s * 3 + st.x);
+          sctx.beginPath();
+          sctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+          sctx.fillStyle = `rgba(255,255,255,${st.o * flicker})`;
+          sctx.fill();
+        });
+        animId = requestAnimationFrame(drawStars);
+      } catch (err) {
+        if (animId) cancelAnimationFrame(animId);
+      }
     }
 
     const handleVisibilityChange = () => {
@@ -68,4 +82,3 @@ export default function BackgroundCanvas() {
     </>
   );
 }
-

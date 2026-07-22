@@ -1,6 +1,7 @@
 import React from 'react';
 import CustomCursor from '../components/CustomCursor';
 import BackgroundCanvas from '../components/BackgroundCanvas';
+import CanvasErrorBoundary from '../components/CanvasErrorBoundary';
 import Navbar from '../components/Navbar';
 import HeroSection from '../components/HeroSection';
 import ApproachSection from '../components/ApproachSection';
@@ -17,7 +18,9 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#080808] text-white selection:bg-[#ff2751] selection:text-white font-sans relative overflow-x-hidden">
       {/* Custom Cursor & Background Starfield Canvas */}
       <CustomCursor />
-      <BackgroundCanvas />
+      <CanvasErrorBoundary fallback={null}>
+        <BackgroundCanvas />
+      </CanvasErrorBoundary>
 
       {/* Navigation */}
       <Navbar />

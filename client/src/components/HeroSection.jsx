@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import FloatingCore from '../three/FloatingCore';
+import CanvasErrorBoundary from './CanvasErrorBoundary';
 import { ArrowRight, Radio, Sparkles, Tv, Award, TrendingUp, Star, Video } from 'lucide-react';
 
 export default function HeroSection() {
@@ -34,7 +35,11 @@ export default function HeroSection() {
     >
       {/* ── 3D Canvas Background for Desktop ── */}
       <div className="hidden sm:block">
-        {!isMobile && <FloatingCore className="absolute inset-0 z-0 pointer-events-none w-full h-full" />}
+        {!isMobile && (
+          <CanvasErrorBoundary>
+            <FloatingCore className="absolute inset-0 z-0 pointer-events-none w-full h-full" />
+          </CanvasErrorBoundary>
+        )}
       </div>
 
       {/* ── Dynamic Ambient Light Gradients ── */}
@@ -92,7 +97,11 @@ export default function HeroSection() {
 
         {/* ── Mobile-Only Dedicated 3D Showcase Card (Unobstructed & Smaller) ── */}
         <div className="sm:hidden w-full max-w-[280px] h-[220px] relative my-4 rounded-3xl border border-[#ff2751]/30 bg-gradient-to-b from-[#140d1a] to-[#07070a] shadow-[0_0_35px_rgba(255,39,81,0.25)] flex items-center justify-center overflow-hidden">
-          {isMobile && <FloatingCore className="w-full h-full pointer-events-none" />}
+          {isMobile && (
+            <CanvasErrorBoundary>
+              <FloatingCore className="w-full h-full pointer-events-none" />
+            </CanvasErrorBoundary>
+          )}
           {/* Subtle badge label inside mobile 3D frame */}
           <div className="absolute bottom-2 px-3 py-0.5 rounded-full bg-black/60 border border-white/10 text-[9px] font-mono uppercase tracking-widest text-gray-400">
             AI Core Engine
