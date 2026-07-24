@@ -89,6 +89,7 @@ export const seedInitialData = async () => {
     }
 
     // Seed Projects
+    await Project.deleteMany({});
     const projectCount = await Project.countDocuments();
     if (projectCount === 0) {
       await Project.insertMany([
@@ -97,7 +98,7 @@ export const seedInitialData = async () => {
           description: 'A revolutionary AI commercial introducing the electric hypercar of tomorrow, rendered with photorealistic light transport physics.',
           videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
           thumbnailUrl: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=1200&auto=format&fit=crop',
-          category: 'AI Advertisements',
+          category: 'Cinematic AI Commercials',
           client: 'Apex Motors Global',
           technology: ['Midjourney v6', 'Sora Engine', 'Runway Gen-2', 'Unreal Engine 5'],
           featured: true,
@@ -108,7 +109,7 @@ export const seedInitialData = async () => {
           description: 'Luxury skincare commercial showcasing microscopic botanical fusion and glowing skin aura simulation.',
           videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
           thumbnailUrl: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=1200&auto=format&fit=crop',
-          category: 'Product Commercials',
+          category: 'Product Animations',
           client: 'Nectar Paris',
           technology: ['Stable Diffusion XL', 'ComfyUI', 'Kling AI', 'DaVinci Resolve'],
           featured: true,
@@ -119,7 +120,7 @@ export const seedInitialData = async () => {
           description: 'Futuristic product commercial depicting audio waves forming tangible neon light architectures.',
           videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
           thumbnailUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1200&auto=format&fit=crop',
-          category: 'Social Media Ads',
+          category: 'TV Commercials',
           client: 'CyberPulse Audio',
           technology: ['Luma Dream Machine', 'ElevenLabs Audio', 'Topaz AI'],
           featured: true,
@@ -130,7 +131,7 @@ export const seedInitialData = async () => {
           description: 'Temporal precision encapsulated in obsidian ceramic and liquid metal hands.',
           videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
           thumbnailUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1200&auto=format&fit=crop',
-          category: 'Brand Videos',
+          category: 'Product Animations',
           client: 'Valence Horizons',
           technology: ['Pika 1.5', 'Midjourney', 'After Effects 2025'],
           featured: false

@@ -6,7 +6,7 @@ const projectSchema = new mongoose.Schema(
     description: { type: String, required: true },
     videoUrl: { type: String, required: true },
     videoPublicId: { type: String, default: '' },
-    thumbnailUrl: { type: String, required: true },
+    thumbnailUrl: { type: String, default: '' },
     thumbnailPublicId: { type: String, default: '' },
     category: { type: String, required: true },
     client: { type: String, required: true },

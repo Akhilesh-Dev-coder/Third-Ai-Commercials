@@ -1,9 +1,16 @@
 import Project from '../models/Project.js';
 import { uploadMediaToCloudinary, deleteMediaFromCloudinary } from '../services/cloudinaryService.js';
+import mongoose from 'mongoose';
+import { fallback } from '../utils/fallbackDb.js';
 
 export const getProjects = async (req, res, next) => {
   try {
     const { category, featured } = req.query;
+    if (mongoose.connection.readyState !== 1) {
+      const projects = fallback.getProjects(category, featured);
+      return res.json({ success: true, count: projects.length, data: projects });
+    }
+
     let query = {};
     if (category && category !== 'All') query.category = category;
     if (featured === 'true') query.featured = true;
@@ -17,6 +24,14 @@ export const getProjects = async (req, res, next) => {
 
 export const getProjectById = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const project = fallback.getProjectById(req.params.id);
+      if (!project) {
+        return res.status(404).json({ success: false, message: 'Project not found' });
+      }
+      return res.json({ success: true, data: project });
+    }
+
     const project = await Project.findById(req.params.id);
     if (!project) {
       return res.status(404).json({ success: false, message: 'Project not found' });
@@ -55,6 +70,24 @@ export const createProject = async (req, res, next) => {
       ? technology.split(',').map((t) => t.trim())
       : [];
 
+    if (mongoose.connection.readyState !== 1) {
+      const project = fallback.createProject({
+        title,
+        description,
+        category,
+        client,
+        technology: techArray,
+        featured: featured === 'true' || featured === true,
+        liveUrl,
+        githubUrl,
+        videoUrl: finalVideoUrl,
+        videoPublicId,
+        thumbnailUrl: finalThumbnailUrl,
+        thumbnailPublicId
+      });
+      return res.status(201).json({ success: true, data: project });
+    }
+
     const project = await Project.create({
       title,
       description,
@@ -78,12 +111,54 @@ export const createProject = async (req, res, next) => {
 
 export const updateProject = async (req, res, next) => {
   try {
+    const { title, description, category, client, technology, featured, liveUrl, githubUrl, videoUrl, thumbnailUrl } = req.body;
+
+    if (mongoose.connection.readyState !== 1) {
+      let project = fallback.getProjectById(req.params.id);
+      if (!project) {
+        return res.status(404).json({ success: false, message: 'Project not found' });
+      }
+
+      let updateData = {};
+      if (title) updateData.title = title;
+      if (description) updateData.description = description;
+      if (category) updateData.category = category;
+      if (client) updateData.client = client;
+      if (liveUrl !== undefined) updateData.liveUrl = liveUrl;
+      if (githubUrl !== undefined) updateData.githubUrl = githubUrl;
+      if (featured !== undefined) updateData.featured = featured === 'true' || featured === true;
+      if (videoUrl) updateData.videoUrl = videoUrl;
+      if (thumbnailUrl) updateData.thumbnailUrl = thumbnailUrl;
+
+      if (technology) {
+        updateData.technology = Array.isArray(technology)
+          ? technology
+          : typeof technology === 'string'
+          ? technology.split(',').map((t) => t.trim())
+          : project.technology;
+      }
+
+      if (req.files) {
+        if (req.files.video && req.files.video[0]) {
+          const uploadedVid = await uploadMediaToCloudinary(req.files.video[0].path, 'third-ai/projects', 'video');
+          updateData.videoUrl = uploadedVid.secure_url;
+          updateData.videoPublicId = uploadedVid.public_id;
+        }
+        if (req.files.thumbnail && req.files.thumbnail[0]) {
+          const uploadedThumb = await uploadMediaToCloudinary(req.files.thumbnail[0].path, 'third-ai/projects', 'image');
+          updateData.thumbnailUrl = uploadedThumb.secure_url;
+          updateData.thumbnailPublicId = uploadedThumb.public_id;
+        }
+      }
+
+      const updatedProject = fallback.updateProject(req.params.id, updateData);
+      return res.json({ success: true, data: updatedProject });
+    }
+
     let project = await Project.findById(req.params.id);
     if (!project) {
       return res.status(404).json({ success: false, message: 'Project not found' });
     }
-
-    const { title, description, category, client, technology, featured, liveUrl, githubUrl, videoUrl, thumbnailUrl } = req.body;
 
     if (title) project.title = title;
     if (description) project.description = description;
@@ -127,6 +202,15 @@ export const updateProject = async (req, res, next) => {
 
 export const deleteProject = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const project = fallback.getProjectById(req.params.id);
+      if (!project) {
+        return res.status(404).json({ success: false, message: 'Project not found' });
+      }
+      fallback.deleteProject(req.params.id);
+      return res.json({ success: true, message: 'Project deleted successfully' });
+    }
+
     const project = await Project.findById(req.params.id);
     if (!project) {
       return res.status(404).json({ success: false, message: 'Project not found' });

@@ -1,8 +1,15 @@
 import CEO from '../models/CEO.js';
 import { uploadMediaToCloudinary, deleteMediaFromCloudinary } from '../services/cloudinaryService.js';
+import mongoose from 'mongoose';
+import { fallback } from '../utils/fallbackDb.js';
 
 export const getCEOs = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const ceos = fallback.getCEOs();
+      return res.json({ success: true, count: ceos.length, data: ceos });
+    }
+
     const ceos = await CEO.find().sort({ order: 1, createdAt: 1 });
     res.json({ success: true, count: ceos.length, data: ceos });
   } catch (error) {
@@ -20,6 +27,19 @@ export const createCEO = async (req, res, next) => {
       const uploaded = await uploadMediaToCloudinary(req.file.path, 'third-ai/ceos', 'image');
       finalImage = uploaded.secure_url;
       publicId = uploaded.public_id;
+    }
+
+    if (mongoose.connection.readyState !== 1) {
+      const ceo = fallback.createCEO({
+        name,
+        position,
+        bio,
+        linkedin,
+        order: Number(order) || 0,
+        image: finalImage,
+        imagePublicId: publicId
+      });
+      return res.status(201).json({ success: true, data: ceo });
     }
 
     const ceo = await CEO.create({
@@ -40,10 +60,32 @@ export const createCEO = async (req, res, next) => {
 
 export const updateCEO = async (req, res, next) => {
   try {
+    const { name, position, bio, linkedin, order, image } = req.body;
+
+    if (mongoose.connection.readyState !== 1) {
+      let ceo = fallback.getCEOs().find(c => c._id === req.params.id);
+      if (!ceo) return res.status(404).json({ success: false, message: 'CEO profile not found' });
+
+      let updateData = {};
+      if (name) updateData.name = name;
+      if (position) updateData.position = position;
+      if (bio) updateData.bio = bio;
+      if (linkedin !== undefined) updateData.linkedin = linkedin;
+      if (order !== undefined) updateData.order = Number(order);
+      if (image) updateData.image = image;
+
+      if (req.file) {
+        const uploaded = await uploadMediaToCloudinary(req.file.path, 'third-ai/ceos', 'image');
+        updateData.image = uploaded.secure_url;
+        updateData.imagePublicId = uploaded.public_id;
+      }
+
+      const updatedCeo = fallback.updateCEO(req.params.id, updateData);
+      return res.json({ success: true, data: updatedCeo });
+    }
+
     let ceo = await CEO.findById(req.params.id);
     if (!ceo) return res.status(404).json({ success: false, message: 'CEO profile not found' });
-
-    const { name, position, bio, linkedin, order, image } = req.body;
 
     if (name) ceo.name = name;
     if (position) ceo.position = position;
@@ -70,6 +112,14 @@ export const updateCEO = async (req, res, next) => {
 
 export const deleteCEO = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const ceo = fallback.getCEOs().find(c => c._id === req.params.id);
+      if (!ceo) return res.status(404).json({ success: false, message: 'CEO profile not found' });
+
+      fallback.deleteCEO(req.params.id);
+      return res.json({ success: true, message: 'CEO deleted successfully' });
+    }
+
     const ceo = await CEO.findById(req.params.id);
     if (!ceo) return res.status(404).json({ success: false, message: 'CEO profile not found' });
 

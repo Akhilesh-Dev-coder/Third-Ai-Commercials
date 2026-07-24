@@ -1,9 +1,19 @@
 import Review from '../models/Review.js';
 import { uploadMediaToCloudinary, deleteMediaFromCloudinary } from '../services/cloudinaryService.js';
+import mongoose from 'mongoose';
+import { fallback } from '../utils/fallbackDb.js';
 
 export const getReviews = async (req, res, next) => {
   try {
     const { includeHidden } = req.query;
+    if (mongoose.connection.readyState !== 1) {
+      let reviews = fallback.getReviews();
+      if (includeHidden !== 'true') {
+        reviews = reviews.filter(r => !r.hidden);
+      }
+      return res.json({ success: true, count: reviews.length, data: reviews });
+    }
+
     let query = {};
     if (includeHidden !== 'true') {
       query.hidden = { $ne: true };
@@ -27,6 +37,19 @@ export const createReview = async (req, res, next) => {
       publicId = uploaded.public_id;
     }
 
+    if (mongoose.connection.readyState !== 1) {
+      const newReview = fallback.createReview({
+        name,
+        company,
+        rating: Number(rating) || 5,
+        review,
+        customerImage: finalImage,
+        customerImagePublicId: publicId,
+        hidden: false
+      });
+      return res.status(201).json({ success: true, data: newReview });
+    }
+
     const newReview = await Review.create({
       name,
       company,
@@ -44,10 +67,32 @@ export const createReview = async (req, res, next) => {
 
 export const updateReview = async (req, res, next) => {
   try {
+    const { name, company, rating, review, hidden, customerImage } = req.body;
+
+    if (mongoose.connection.readyState !== 1) {
+      let reviewItem = fallback.getReviews().find(r => r._id === req.params.id);
+      if (!reviewItem) return res.status(404).json({ success: false, message: 'Review not found' });
+
+      let updateData = {};
+      if (name) updateData.name = name;
+      if (company) updateData.company = company;
+      if (rating) updateData.rating = Number(rating);
+      if (review) updateData.review = review;
+      if (hidden !== undefined) updateData.hidden = hidden === 'true' || hidden === true;
+      if (customerImage) updateData.customerImage = customerImage;
+
+      if (req.file) {
+        const uploaded = await uploadMediaToCloudinary(req.file.path, 'third-ai/reviews', 'image');
+        updateData.customerImage = uploaded.secure_url;
+        updateData.customerImagePublicId = uploaded.public_id;
+      }
+
+      const updatedReview = fallback.updateReview(req.params.id, updateData);
+      return res.json({ success: true, data: updatedReview });
+    }
+
     let reviewItem = await Review.findById(req.params.id);
     if (!reviewItem) return res.status(404).json({ success: false, message: 'Review not found' });
-
-    const { name, company, rating, review, hidden, customerImage } = req.body;
 
     if (name) reviewItem.name = name;
     if (company) reviewItem.company = company;
@@ -74,6 +119,14 @@ export const updateReview = async (req, res, next) => {
 
 export const toggleHideReview = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      let reviewItem = fallback.getReviews().find(r => r._id === req.params.id);
+      if (!reviewItem) return res.status(404).json({ success: false, message: 'Review not found' });
+
+      const updatedReview = fallback.updateReview(req.params.id, { hidden: !reviewItem.hidden });
+      return res.json({ success: true, data: updatedReview, message: `Review ${updatedReview.hidden ? 'hidden' : 'visible'}` });
+    }
+
     const reviewItem = await Review.findById(req.params.id);
     if (!reviewItem) return res.status(404).json({ success: false, message: 'Review not found' });
 
@@ -88,6 +141,14 @@ export const toggleHideReview = async (req, res, next) => {
 
 export const deleteReview = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const reviewItem = fallback.getReviews().find(r => r._id === req.params.id);
+      if (!reviewItem) return res.status(404).json({ success: false, message: 'Review not found' });
+
+      fallback.deleteReview(req.params.id);
+      return res.json({ success: true, message: 'Review deleted successfully' });
+    }
+
     const reviewItem = await Review.findById(req.params.id);
     if (!reviewItem) return res.status(404).json({ success: false, message: 'Review not found' });
 

@@ -83,3 +83,5 @@ connectDB().then(async (conn) => {
     console.log(`[Third AI Server] Running on http://localhost:${PORT}`);
   });
 });
+
+export default app;

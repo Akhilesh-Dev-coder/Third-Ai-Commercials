@@ -1,7 +1,14 @@
 import Stats from '../models/Stats.js';
+import mongoose from 'mongoose';
+import { fallback } from '../utils/fallbackDb.js';
 
 export const getStats = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const stats = fallback.getStats();
+      return res.json({ success: true, data: stats });
+    }
+
     let stats = await Stats.findOne();
     if (!stats) {
       stats = await Stats.create({
@@ -19,6 +26,11 @@ export const getStats = async (req, res, next) => {
 
 export const updateStats = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const stats = fallback.updateStats(req.body);
+      return res.json({ success: true, data: stats });
+    }
+
     let stats = await Stats.findOne();
     if (!stats) {
       stats = new Stats(req.body);

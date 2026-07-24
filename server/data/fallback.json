@@ -1,0 +1,123 @@
+{
+  "users": [
+    {
+      "_id": "user_admin_thirdai_exec",
+      "name": "Third AI Executive",
+      "email": "admin@thirdai.com",
+      "password": "$2a$10$f1sxYQlNuOZ5XKyDXzlThOmCuRx/LfAT5n0qTMgykS6YxYtH6seee",
+      "role": "admin",
+      "createdAt": "2026-07-22T19:36:37.977Z"
+    }
+  ],
+  "stats": [
+    {
+      "_id": "stats_default",
+      "businessesServed": 180,
+      "commercialsCreated": 540,
+      "viewsGenerated": "120M+",
+      "countriesReached": 42,
+      "createdAt": "2026-07-22T19:36:37.982Z"
+    }
+  ],
+  "services": [
+    {
+      "_id": "srv_1",
+      "title": "AI Advertisements",
+      "description": "Photorealistic, hyper-engaging AI-generated TV and digital commercials that capture brand identity.",
+      "icon": "Sparkles",
+      "cta": "Book Commercial",
+      "order": 1
+    },
+    {
+      "_id": "srv_2",
+      "title": "Product Commercials",
+      "description": "Cinematic 3D & AI product reveals, macro-detail showcases, and fluid motion product commercials.",
+      "icon": "Box",
+      "cta": "Showcase Product",
+      "order": 2
+    },
+    {
+      "_id": "srv_3",
+      "title": "Social Media Ads",
+      "description": "High-converting viral short-form ads tailored for TikTok, Instagram Reels, and YouTube Shorts.",
+      "icon": "Video",
+      "cta": "Go Viral",
+      "order": 3
+    },
+    {
+      "_id": "srv_4",
+      "title": "Brand Videos",
+      "description": "Emotional, narrative-driven brand films that establish world-class brand prestige in days.",
+      "icon": "Film",
+      "cta": "Craft Story",
+      "order": 4
+    },
+    {
+      "_id": "srv_5",
+      "title": "AI Video Editing",
+      "description": "Automated high-speed precision grading, visual effects enhancement, and audio master tracks.",
+      "icon": "Sliders",
+      "cta": "Enhance Media",
+      "order": 5
+    },
+    {
+      "_id": "srv_6",
+      "title": "Marketing Creatives",
+      "description": "Multi-variant static and dynamic AI creative packages for multi-channel ad campaigns.",
+      "icon": "Layers",
+      "cta": "Scale Creatives",
+      "order": 6
+    }
+  ],
+  "projects": [],
+  "ceos": [
+    {
+      "_id": "ceo_1",
+      "name": "Alexander Vance",
+      "position": "Co-Founder & Chief Executive Officer",
+      "bio": "Former Hollywood Creative Director and Stanford AI researcher with 12+ years pioneering generative cinema and commercial production.",
+      "image": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop",
+      "linkedin": "https://linkedin.com",
+      "order": 1
+    },
+    {
+      "_id": "ceo_2",
+      "name": "Elena Rostova",
+      "position": "Co-Founder & Chief Technology Officer",
+      "bio": "Ex-DeepMind Lead Visual Engineer specializing in neural rendering pipelines, real-time light fields, and generative video diffusion models.",
+      "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop",
+      "linkedin": "https://linkedin.com",
+      "order": 2
+    }
+  ],
+  "reviews": [
+    {
+      "_id": "rev_1",
+      "name": "Marcus Sterling",
+      "company": "CMO, Apex Global",
+      "rating": 5,
+      "review": "Third AI produced a TV commercial for our luxury EV launch in 4 days. The visual quality surpassed $500k legacy studio productions and generated 40M+ impressions in week one.",
+      "customerImage": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop",
+      "hidden": false
+    },
+    {
+      "_id": "rev_2",
+      "name": "Sophia Chen",
+      "company": "VP Marketing, Nectar Beauty",
+      "rating": 5,
+      "review": "The precision, lighting, and speed of Third AI are mind-blowing. Their AI pipeline gave us 10 variations of high-converting social ads for a fraction of traditional costs.",
+      "customerImage": "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&auto=format&fit=crop",
+      "hidden": false
+    },
+    {
+      "_id": "rev_3",
+      "name": "David K. Miller",
+      "company": "Founder, CyberPulse Audio",
+      "rating": 5,
+      "review": "Incredible work ethics and unmatched technological prowess. They transformed our product CAD models into hyper-stylized futuristic spots. Truly an unfair advantage.",
+      "customerImage": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop",
+      "hidden": false
+    }
+  ],
+  "contacts": []
+}

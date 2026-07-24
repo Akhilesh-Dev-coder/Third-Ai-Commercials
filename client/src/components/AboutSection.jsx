@@ -24,10 +24,10 @@ export default function AboutSection() {
         </h2>
 
         <p className="text-gray-300 font-light text-base sm:text-xl leading-relaxed max-w-3xl mx-auto">
-          Third AI Commercials is a{' '}
-          <strong className="text-white font-semibold">two-person studio from Haripad, Kerala</strong> — built
-          with no funding and no film background, to broadcast standard, in nine months. We pair AI production
-          with real marketing strategy to make brand films that don't just look good — they grow businesses.
+          Third AI Commercials is{' '}
+          <strong className="text-white font-semibold">Kerala's first AI-native commercial production studio</strong>.{' '}
+          We produce cinematic brand films that air on national television networks — combining AI production
+          with strategic storytelling to make your brand impossible to ignore.
         </p>
 
         {/* Founders Grid */}

@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ProjectModal from './ProjectModal';
+import { fetchProjects } from '../services/api';
 
 import aurumWatchesImg from '../assets/aurum_watches.png';
 import voltaEvImg from '../assets/volta_ev.png';
@@ -165,7 +166,7 @@ function ProjectCard({ project, index, onSelect }) {
       <div
         ref={bgRef}
         className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out"
-        style={{ backgroundImage: `url(${project.img})` }}
+        style={{ backgroundImage: `url(${project.img || project.thumbnailUrl || ''})` }}
       />
 
       {/* Red Radial Glow */}
@@ -193,13 +194,13 @@ function ProjectCard({ project, index, onSelect }) {
       {/* Card Info */}
       <div className="absolute left-0 right-0 bottom-0 p-8 z-20">
         <div className="font-display text-xs tracking-[0.2em] uppercase text-brand-red mb-2 font-semibold">
-          {project.cat}
+          {project.cat || project.category}
         </div>
         <h3 className="font-display text-2xl sm:text-3xl font-light text-white mb-3 leading-tight">
           {project.title}
         </h3>
         <div className="flex flex-wrap gap-2">
-          {project.tools.split(' · ').map((tool, tIdx) => (
+          {(project.tools || (Array.isArray(project.technology) ? project.technology.join(' · ') : project.technology || '')).split(' · ').map((tool, tIdx) => (
             <span
               key={tIdx}
               className="text-[11px] font-mono text-gray-300 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15"
@@ -215,6 +216,26 @@ function ProjectCard({ project, index, onSelect }) {
 
 export default function FeaturedWorkSection() {
   const [selectedProject, setSelectedProject] = useState(null);
+  const [dynamicProjects, setDynamicProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const res = await fetchProjects();
+        if (res.data.success && res.data.data && res.data.data.length > 0) {
+          setDynamicProjects(res.data.data);
+        }
+      } catch (error) {
+        console.error("Failed to load projects from backend, using fallbacks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProjects();
+  }, []);
+
+  const displayProjects = dynamicProjects.length > 0 ? dynamicProjects : projects;
 
   return (
     <section className="section" id="work">
@@ -233,8 +254,8 @@ export default function FeaturedWorkSection() {
 
       {/* Bento Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {projects.map((p, idx) => (
-          <ProjectCard key={p._id} index={idx} project={p} onSelect={setSelectedProject} />
+        {displayProjects.map((p, idx) => (
+          <ProjectCard key={p._id || idx} index={idx} project={p} onSelect={setSelectedProject} />
         ))}
       </div>
 

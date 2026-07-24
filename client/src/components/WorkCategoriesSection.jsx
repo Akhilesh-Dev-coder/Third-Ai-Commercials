@@ -1,99 +1,147 @@
-import React from 'react';
-import { Tv, Film, Smartphone, Box, ArrowUpRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Tv, Film, Box, ArrowUpRight } from 'lucide-react';
+import { fetchProjects } from '../services/api';
+import CategoryVideoPlayerModal from './CategoryVideoPlayerModal';
 
 export default function WorkCategoriesSection() {
+  const [projects, setProjects] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
+  useEffect(() => {
+    const getProjects = async () => {
+      try {
+        const res = await fetchProjects();
+        if (res.data.success) {
+          setProjects(res.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to load projects for categories:', error);
+      }
+    };
+    getProjects();
+  }, []);
+
   const categories = [
     {
-      badge: 'TV & Theatre Commercial',
-      title: 'Broadcast Commercials',
-      desc: 'Television-standard ads that give your brand the authority of the big players.',
-      ph: '[ TVC reel ]',
-      icon: <Tv className="w-5 h-5 sm:w-6 sm:h-6 text-[#ff2751]" />,
-      accent: 'from-[#ff2751]/20 to-[#080808]'
-    },
-    {
-      badge: 'AI Commercial',
-      title: 'Cinematic Brand Films',
-      desc: 'Story-driven films for brands that intend to stand apart from the crowd.',
-      ph: '[ commercial reel ]',
+      badge: 'AI Cinematic',
+      title: 'Cinematic AI Commercials',
+      desc: 'Story-driven, visually spectacular campaigns generated using state-of-the-art neural video models.',
+      fallbackBg: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop',
       icon: <Film className="w-5 h-5 sm:w-6 sm:h-6 text-[#e722ff]" />,
-      accent: 'from-[#e722ff]/20 to-[#080808]'
+      accent: 'from-[#e722ff]/40 to-[#080808]'
     },
     {
-      badge: 'AI UGC',
-      title: 'Performance Ad Content',
-      desc: 'Scroll-stopping, conversion-focused creative built for Meta & Instagram.',
-      ph: '[ UGC reel ]',
-      icon: <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-[#ff2751]" />,
-      accent: 'from-[#ff2751]/20 to-[#080808]'
+      badge: 'TV & Cinema',
+      title: 'TV Commercials',
+      desc: 'Television-standard commercials that give your brand the authority of prime-time broadcast media.',
+      fallbackBg: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=800&auto=format&fit=crop',
+      icon: <Tv className="w-5 h-5 sm:w-6 sm:h-6 text-[#ff2751]" />,
+      accent: 'from-[#ff2751]/40 to-[#080808]'
     },
     {
-      badge: 'Product Animation',
-      title: 'Product Showcases',
-      desc: 'Premium animations that make any product look established and trusted.',
-      ph: '[ product reel ]',
+      badge: '3D & AI Animation',
+      title: 'Product Animations',
+      desc: 'High-end product renderings and simulations that highlight product mechanics with stunning realism.',
+      fallbackBg: 'https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=800&auto=format&fit=crop',
       icon: <Box className="w-5 h-5 sm:w-6 sm:h-6 text-[#e722ff]" />,
-      accent: 'from-[#e722ff]/20 to-[#080808]'
+      accent: 'from-[#e722ff]/40 to-[#080808]'
     }
   ];
 
+  const getCategoryMedia = (catTitle) => {
+    const catProjects = projects.filter(
+      (p) => (p.category || p.cat || '').toLowerCase() === catTitle.toLowerCase()
+    );
+    const firstProj = catProjects[0];
+    return {
+      thumbnail: firstProj?.thumbnailUrl || '',
+      count: catProjects.length
+    };
+  };
+
   return (
-    <section className="py-16 sm:py-24 bg-[#080808] text-white relative select-none" id="work">
+    <section className="py-16 sm:py-24 bg-[#050507] text-white relative select-none" id="work">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
 
-        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-brand-red/30 bg-brand-red/10 text-brand-red font-mono text-xs uppercase tracking-[0.3em]">
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-20 space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#ff2751]/30 bg-[#ff2751]/[0.06] text-[#ff3b61] font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em]">
             Production Tiers
           </div>
-          <h2 className="font-display font-extrabold text-3xl sm:text-5xl text-white">
-            What We Create
+          <h2 className="font-display font-black text-3xl sm:text-5xl md:text-6xl text-white tracking-tight">
+            Our Work Tiers
           </h2>
-          <p className="text-gray-400 text-sm sm:text-xl font-light">
-            Four tiers of production — every one built to sell.
+          <p className="text-gray-400 text-sm sm:text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed">
+            Click on any tier below to browse and stream our portfolio of commercials.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-          {categories.map((cat, idx) => (
-            <div
-              key={idx}
-              className="relative min-h-[220px] sm:min-h-0 sm:aspect-[16/10] rounded-2xl sm:rounded-3xl border border-white/10 bg-gradient-to-br from-[#16161c] via-[#0f0f13] to-[#09090c] p-6 sm:p-8 flex flex-col justify-between overflow-hidden group hover:border-[#ff2751]/60 transition-all duration-500 shadow-2xl hover:shadow-[0_15px_40px_rgba(255,39,81,0.2)]"
-            >
-              {/* Corner Ambient Glow */}
-              <div className={`absolute top-0 right-0 w-40 h-40 sm:w-52 sm:h-52 bg-gradient-to-br ${cat.accent} rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
+        {/* Grid Cards Container */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          {categories.map((cat, idx) => {
+            const media = getCategoryMedia(cat.title);
+            const bgImage = media.thumbnail || cat.fallbackBg;
 
-              {/* Top Header Row */}
-              <div className="flex items-center justify-between relative z-10 mb-6 sm:mb-0">
-                <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 backdrop-blur group-hover:border-[#ff2751]/40 transition duration-300">
-                  {cat.icon}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest bg-black/40 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-white/10">
-                    {cat.ph}
-                  </span>
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#ff2751] text-white transition-colors duration-300">
-                    <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            return (
+              <div
+                key={idx}
+                onClick={() => setSelectedCategory(cat.title)}
+                className="relative aspect-[1.4] sm:aspect-[1.3] md:aspect-[16/11.5] rounded-[24px] sm:rounded-[32px] border border-white/10 bg-[#0f0f13] overflow-hidden group cursor-pointer transition-all duration-500 hover:border-brand-red/60 hover:shadow-[0_20px_50px_rgba(255,39,81,0.25)] hover:scale-[1.015] active:scale-[0.985] flex flex-col justify-between p-6 sm:p-8"
+              >
+                {/* Background Image with Zoom on Hover */}
+                <div
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                  style={{ backgroundImage: `url(${bgImage})` }}
+                />
+
+                {/* Dark Gradient Overlay for Typography Contrast */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20 opacity-90 group-hover:opacity-75 transition-opacity duration-500" />
+
+                {/* Colored Glow Effects */}
+                <div className={`absolute -top-20 -right-20 w-44 h-44 rounded-full blur-[80px] bg-gradient-to-br ${cat.accent} opacity-30 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none`} />
+
+                {/* Top Content Row */}
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md group-hover:border-brand-red/40 transition duration-300">
+                    {cat.icon}
                   </div>
+                  
+                  {/* Dynamic Video Count Pill */}
+                  <span className="font-mono text-[10px] font-bold text-gray-300 uppercase tracking-widest bg-black/60 px-3.5 py-1.5 rounded-full border border-white/10 backdrop-blur-md flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse" />
+                    {media.count > 0 ? `${media.count} Videos` : 'Watch Reel'}
+                  </span>
                 </div>
-              </div>
 
-              {/* Bottom Content */}
-              <div className="relative z-10 space-y-1.5 sm:space-y-2">
-                <div className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-[#ff2751]">
-                  {cat.badge}
+                {/* Bottom Content Area */}
+                <div className="relative z-10 space-y-2 text-left">
+                  <div className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-[#ff3b61]">
+                    {cat.badge}
+                  </div>
+                  
+                  <h3 className="font-display font-black text-xl sm:text-3xl text-white tracking-tight leading-tight group-hover:text-white transition duration-300">
+                    {cat.title}
+                  </h3>
+                  
+                  <p className="text-gray-300 text-xs sm:text-sm font-light leading-relaxed line-clamp-2">
+                    {cat.desc}
+                  </p>
                 </div>
-                <h3 className="font-display font-bold text-xl sm:text-3xl text-white group-hover:text-white transition">
-                  {cat.title}
-                </h3>
-                <p className="text-gray-400 text-xs sm:text-base font-light leading-relaxed">
-                  {cat.desc}
-                </p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
       </div>
+
+      {/* Category Video reels/scrollable view modal */}
+      {selectedCategory && (
+        <CategoryVideoPlayerModal
+          category={selectedCategory}
+          projects={projects}
+          onClose={() => setSelectedCategory(null)}
+        />
+      )}
     </section>
   );
 }

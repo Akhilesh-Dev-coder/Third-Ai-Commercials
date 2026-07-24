@@ -48,11 +48,6 @@ export default function AdminDashboardPage() {
 
   const tabs = [
     { id: 'projects', label: 'Commercial Projects', icon: Film },
-    { id: 'services', label: 'Agency Services', icon: Sparkles },
-    { id: 'reviews', label: 'Client Reviews', icon: MessageSquare },
-    { id: 'ceos', label: 'Executive CEOs', icon: Users },
-    { id: 'inquiries', label: 'Contact Inquiries', icon: Inbox },
-    { id: 'stats', label: 'Website Metrics', icon: BarChart3 },
   ];
 
   return (
@@ -135,12 +130,7 @@ export default function AdminDashboardPage() {
 
       {/* Main Content View */}
       <main className="flex-1 p-6 sm:p-10 overflow-y-auto max-w-7xl">
-        {activeTab === 'projects' && <ProjectsManager />}
-        {activeTab === 'services' && <ServicesManager />}
-        {activeTab === 'reviews' && <ReviewsManager />}
-        {activeTab === 'ceos' && <CEOManager />}
-        {activeTab === 'inquiries' && <InquiriesManager />}
-        {activeTab === 'stats' && <StatsManager />}
+        <ProjectsManager />
       </main>
     </div>
   );

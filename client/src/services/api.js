@@ -23,6 +23,9 @@ export const getMe = () => api.get('/auth/me');
 // Projects API
 export const fetchProjects = (params) => api.get('/projects', { params });
 export const fetchProjectById = (id) => api.get(`/projects/${id}`);
+export const getCloudinaryConfig = () => api.get('/projects/cloudinary-config');
+export const getCloudinarySignature = () => api.get('/projects/cloudinary-signature');
+export const getPresignedUrl = (payload) => api.post('/projects/presigned-url', payload);
 export const createProject = (formData) => api.post('/projects', formData, {
   headers: { 'Content-Type': 'multipart/form-data' }
 });

@@ -134,8 +134,8 @@ export default function HeroSection() {
             }`}
         >
           <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff2751] opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#ff2751]" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#10b981]" />
           </span>
           <span>Kerala's AI Ad Studio · On Air Across the State</span>
         </div>
@@ -156,11 +156,12 @@ export default function HeroSection() {
 
         {/* Subtitle */}
         <p
-          className={`text-gray-300 font-light max-w-3xl leading-relaxed text-sm sm:text-2xl mb-6 sm:mb-12 transition-all duration-700 delay-200 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          className={`text-gray-200 sm:text-gray-300 font-normal sm:font-light max-w-3xl leading-relaxed text-[16px] sm:text-xl md:text-2xl mb-6 sm:mb-12 transition-all duration-700 delay-200 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
+          style={{ textShadow: '0 2px 12px rgba(0, 0, 0, 0.6)' }}
         >
           Cinematic, AI-native brand films that sell —{' '}
-          <strong className="text-white font-semibold">
+          <strong className="text-white font-medium sm:font-semibold">
             produced in days, at a fraction of traditional cost, and now airing on Kerala television.
           </strong>
         </p>
