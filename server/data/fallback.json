@@ -69,7 +69,48 @@
       "order": 6
     }
   ],
-  "projects": [],
+  "projects": [
+    {
+      "_id": "proj_u0q1r6j40",
+      "createdAt": "2026-07-29T15:49:54.044Z",
+      "updatedAt": "2026-07-29T17:01:42.971Z",
+      "title": "commercial advertisement",
+      "description": "dlfijldsjfhohdfn fhodnohinhoc ofo ",
+      "category": "Cinematic AI Commercials",
+      "client": "test",
+      "technology": [
+        "tssjflsd",
+        "sdjofjdlf",
+        "sdfljf",
+        "sdfljf"
+      ],
+      "featured": true,
+      "videoUrl": "https://pub-0f81ac1dcd2e444b9a451910d1eb2b61.r2.dev/videos/1785344424180_A_CINEMATIC_4K_STORY_AD.mp4",
+      "videoPublicId": "",
+      "thumbnailUrl": "",
+      "thumbnailPublicId": ""
+    },
+    {
+      "_id": "proj_9bfu5qe5d",
+      "createdAt": "2026-07-29T16:45:16.508Z",
+      "updatedAt": "2026-07-29T16:46:44.900Z",
+      "title": "bounday",
+      "description": "asdiuhehf wehfihs ifhiushf hdsiufhsoihdfiughfoi ",
+      "category": "Cinematic AI Commercials",
+      "client": "test",
+      "technology": [
+        "sdhfdh",
+        "sdfosjdf",
+        "sdhfldjf",
+        "shdolf"
+      ],
+      "featured": true,
+      "videoUrl": "https://pub-0f81ac1dcd2e444b9a451910d1eb2b61.r2.dev/videos/1785343441253_A_boundary_of_aliens_.mp4",
+      "videoPublicId": "",
+      "thumbnailUrl": "",
+      "thumbnailPublicId": ""
+    }
+  ],
   "ceos": [
     {
       "_id": "ceo_1",

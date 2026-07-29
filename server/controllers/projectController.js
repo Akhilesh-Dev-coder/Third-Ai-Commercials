@@ -2,6 +2,16 @@ import Project from '../models/Project.js';
 import { uploadMediaToCloudinary, deleteMediaFromCloudinary } from '../services/cloudinaryService.js';
 import mongoose from 'mongoose';
 import { fallback } from '../utils/fallbackDb.js';
+import { transcodeAudioToAAC } from '../services/r2Service.js';
+
+const extractR2Key = (url) => {
+  const publicUrl = process.env.R2_PUBLIC_URL || '';
+  const cleanPublicUrl = publicUrl.endsWith('/') ? publicUrl.slice(0, -1) : publicUrl;
+  if (url && url.startsWith(cleanPublicUrl)) {
+    return url.replace(cleanPublicUrl + '/', '');
+  }
+  return null;
+};
 
 export const getProjects = async (req, res, next) => {
   try {
@@ -69,6 +79,13 @@ export const createProject = async (req, res, next) => {
       : typeof technology === 'string'
       ? technology.split(',').map((t) => t.trim())
       : [];
+
+    const r2Key = extractR2Key(finalVideoUrl);
+    if (r2Key) {
+      transcodeAudioToAAC(r2Key).catch((err) => {
+        console.error('[Transcode Trigger Error] Failed to start transcode in background:', err);
+      });
+    }
 
     if (mongoose.connection.readyState !== 1) {
       const project = fallback.createProject({
@@ -152,6 +169,15 @@ export const updateProject = async (req, res, next) => {
       }
 
       const updatedProject = fallback.updateProject(req.params.id, updateData);
+
+      // Trigger background audio transcoding if hosted on Cloudflare R2
+      const r2Key = extractR2Key(updatedProject.videoUrl);
+      if (r2Key) {
+        transcodeAudioToAAC(r2Key).catch((err) => {
+          console.error('[Transcode Trigger Error] Failed to start transcode in background:', err);
+        });
+      }
+
       return res.json({ success: true, data: updatedProject });
     }
 
@@ -191,6 +217,14 @@ export const updateProject = async (req, res, next) => {
         project.thumbnailUrl = uploadedThumb.secure_url;
         project.thumbnailPublicId = uploadedThumb.public_id;
       }
+    }
+
+    // Trigger background audio transcoding if hosted on Cloudflare R2
+    const r2Key = extractR2Key(project.videoUrl);
+    if (r2Key) {
+      transcodeAudioToAAC(r2Key).catch((err) => {
+        console.error('[Transcode Trigger Error] Failed to start transcode in background:', err);
+      });
     }
 
     await project.save();

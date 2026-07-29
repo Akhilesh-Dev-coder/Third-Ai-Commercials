@@ -3,10 +3,12 @@ import { X, Volume2, VolumeX, Play, Pause, Film, Tv, Box } from 'lucide-react';
 
 export default function CategoryVideoPlayerModal({ category, projects = [], onClose }) {
   const [activeIdx, setActiveIdx] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false); // Start unmuted by default when clicked
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const videoRefs = useRef([]);
+  
+  const mobileVideoRefs = useRef([]);
+  const laptopVideoRef = useRef(null);
 
   // Filter projects by category
   const filteredProjects = projects.filter(
@@ -40,24 +42,62 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
     };
   }, []);
 
-  // Handle active video change
+  // Handle active video change and playback
   useEffect(() => {
-    // Pause all other videos
-    videoRefs.current.forEach((ref, idx) => {
-      if (ref) {
-        if (idx === activeIdx) {
-          if (isPlaying) {
-            ref.play().catch(() => {});
+    if (isMobile) {
+      // Mobile snaps multiple video elements
+      mobileVideoRefs.current.forEach((ref, idx) => {
+        if (ref) {
+          ref.muted = isMuted;
+          if (idx === activeIdx) {
+            if (isPlaying) {
+              ref.play()
+                .then(() => {
+                  ref.muted = isMuted;
+                })
+                .catch(() => {});
+            } else {
+              ref.pause();
+            }
           } else {
             ref.pause();
+            ref.currentTime = 0;
           }
+        }
+      });
+    } else {
+      // Laptop: only one video element exists in DOM
+      const ref = laptopVideoRef.current;
+      if (ref) {
+        ref.muted = isMuted;
+        if (isPlaying) {
+          ref.play()
+            .then(() => {
+              ref.muted = isMuted;
+            })
+            .catch(() => {});
         } else {
           ref.pause();
-          ref.currentTime = 0;
         }
       }
-    });
+    }
   }, [activeIdx, isPlaying, isMobile]);
+
+  // Handle dynamic volume changes (fixes React's video muted attribute bug in Chrome/Safari)
+  useEffect(() => {
+    if (isMobile) {
+      mobileVideoRefs.current.forEach((ref) => {
+        if (ref) {
+          ref.muted = isMuted;
+        }
+      });
+    } else {
+      const ref = laptopVideoRef.current;
+      if (ref) {
+        ref.muted = isMuted;
+      }
+    }
+  }, [isMuted, activeIdx, isMobile]);
 
   if (filteredProjects.length === 0) {
     return (
@@ -89,7 +129,7 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
   };
 
   const togglePlay = () => {
-    const activeVideo = videoRefs.current[activeIdx];
+    const activeVideo = isMobile ? mobileVideoRefs.current[activeIdx] : laptopVideoRef.current;
     if (activeVideo) {
       if (isPlaying) {
         activeVideo.pause();
@@ -141,10 +181,9 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
 
                 {/* Background Video */}
                 <video
-                  ref={(el) => (videoRefs.current[idx] = el)}
+                  ref={(el) => (mobileVideoRefs.current[idx] = el)}
                   src={proj.videoUrl}
                   poster={proj.thumbnailUrl}
-                  muted={isMuted}
                   loop
                   playsInline
                   onClick={togglePlay}
@@ -204,10 +243,9 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
           {/* Left Side: Active Video Player & HUD */}
           <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden group/player">
             <video
-              ref={(el) => (videoRefs.current[activeIdx] = el)}
+              ref={laptopVideoRef}
               src={activeProject.videoUrl}
               poster={activeProject.thumbnailUrl}
-              muted={isMuted}
               loop
               playsInline
               className="w-full h-full object-contain relative z-10"

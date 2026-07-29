@@ -26,7 +26,7 @@ export default function WorkCategoriesSection() {
       badge: 'AI Cinematic',
       title: 'Cinematic AI Commercials',
       desc: 'Story-driven, visually spectacular campaigns generated using state-of-the-art neural video models.',
-      fallbackBg: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop',
+      permanentBg: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop',
       icon: <Film className="w-5 h-5 sm:w-6 sm:h-6 text-[#e722ff]" />,
       accent: 'from-[#e722ff]/40 to-[#080808]'
     },
@@ -34,7 +34,7 @@ export default function WorkCategoriesSection() {
       badge: 'TV & Cinema',
       title: 'TV Commercials',
       desc: 'Television-standard commercials that give your brand the authority of prime-time broadcast media.',
-      fallbackBg: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=800&auto=format&fit=crop',
+      permanentBg: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=1200&auto=format&fit=crop',
       icon: <Tv className="w-5 h-5 sm:w-6 sm:h-6 text-[#ff2751]" />,
       accent: 'from-[#ff2751]/40 to-[#080808]'
     },
@@ -42,7 +42,7 @@ export default function WorkCategoriesSection() {
       badge: '3D & AI Animation',
       title: 'Product Animations',
       desc: 'High-end product renderings and simulations that highlight product mechanics with stunning realism.',
-      fallbackBg: 'https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=800&auto=format&fit=crop',
+      permanentBg: 'https://images.unsplash.com/photo-1581092921461-eab62e97a780?q=80&w=1200&auto=format&fit=crop',
       icon: <Box className="w-5 h-5 sm:w-6 sm:h-6 text-[#e722ff]" />,
       accent: 'from-[#e722ff]/40 to-[#080808]'
     }
@@ -52,9 +52,7 @@ export default function WorkCategoriesSection() {
     const catProjects = projects.filter(
       (p) => (p.category || p.cat || '').toLowerCase() === catTitle.toLowerCase()
     );
-    const firstProj = catProjects[0];
     return {
-      thumbnail: firstProj?.thumbnailUrl || '',
       count: catProjects.length
     };
   };
@@ -80,7 +78,7 @@ export default function WorkCategoriesSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {categories.map((cat, idx) => {
             const media = getCategoryMedia(cat.title);
-            const bgImage = media.thumbnail || cat.fallbackBg;
+            const bgImage = cat.permanentBg;
 
             return (
               <div

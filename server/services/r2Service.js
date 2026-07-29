@@ -1,4 +1,11 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { 
+  S3Client, 
+  PutObjectCommand,
+  GetObjectCommand,
+  CreateMultipartUploadCommand,
+  UploadPartCommand,
+  CompleteMultipartUploadCommand 
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const s3 = new S3Client({
@@ -11,18 +18,18 @@ const s3 = new S3Client({
   signatureVersion: 'v4'
 });
 
-/**
- * Generates an S3 Presigned URL for uploading a file directly to Cloudflare R2.
- * @param {string} fileName Original name of the file
- * @param {string} fileType MIME type of the file (e.g. video/mp4)
- * @returns {Promise<{presignedUrl: string, publicUrl: string, fileKey: string}>}
- */
-export const generatePresignedUrl = async (fileName, fileType) => {
+const checkConfig = () => {
   if (!process.env.CLOUDFLARE_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
     throw new Error('Cloudflare R2 is not fully configured on the server. Please check your .env variables.');
   }
+};
 
-  // Sanitize file name and prepend unique timestamp
+/**
+ * Generates an S3 Presigned URL for uploading a file directly to Cloudflare R2 in a single request.
+ */
+export const generatePresignedUrl = async (fileName, fileType) => {
+  checkConfig();
+
   const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
   const fileKey = `videos/${Date.now()}_${sanitizedName}`;
 
@@ -32,13 +39,146 @@ export const generatePresignedUrl = async (fileName, fileType) => {
     ContentType: fileType
   });
 
-  // Presigned URL expires in 1 hour (3600 seconds)
   const presignedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
 
-  // Public access URL
   const bucketPublicUrl = process.env.R2_PUBLIC_URL || '';
   const cleanPublicUrl = bucketPublicUrl.endsWith('/') ? bucketPublicUrl.slice(0, -1) : bucketPublicUrl;
   const publicUrl = `${cleanPublicUrl}/${fileKey}`;
 
   return { presignedUrl, publicUrl, fileKey };
+};
+
+/**
+ * Initializes a multipart upload session.
+ */
+export const startMultipartUpload = async (fileName, fileType) => {
+  checkConfig();
+
+  const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const fileKey = `videos/${Date.now()}_${sanitizedName}`;
+
+  const command = new CreateMultipartUploadCommand({
+    Bucket: process.env.R2_BUCKET_NAME || 'third-ai-commercials',
+    Key: fileKey,
+    ContentType: fileType
+  });
+
+  const response = await s3.send(command);
+
+  const bucketPublicUrl = process.env.R2_PUBLIC_URL || '';
+  const cleanPublicUrl = bucketPublicUrl.endsWith('/') ? bucketPublicUrl.slice(0, -1) : bucketPublicUrl;
+  const publicUrl = `${cleanPublicUrl}/${fileKey}`;
+
+  return {
+    uploadId: response.UploadId,
+    key: fileKey,
+    publicUrl
+  };
+};
+
+/**
+ * Generates a presigned URL for a single part of a multipart upload.
+ */
+export const getMultipartPresignedUrl = async (key, uploadId, partNumber) => {
+  checkConfig();
+
+  const command = new UploadPartCommand({
+    Bucket: process.env.R2_BUCKET_NAME || 'third-ai-commercials',
+    Key: key,
+    UploadId: uploadId,
+    PartNumber: partNumber
+  });
+
+  const presignedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+  return presignedUrl;
+};
+
+/**
+ * Completes the multipart upload session.
+ */
+export const completeMultipartUpload = async (key, uploadId, parts) => {
+  checkConfig();
+
+  const sortedParts = parts.sort((a, b) => a.PartNumber - b.PartNumber);
+
+  const command = new CompleteMultipartUploadCommand({
+    Bucket: process.env.R2_BUCKET_NAME || 'third-ai-commercials',
+    Key: key,
+    UploadId: uploadId,
+    MultipartUpload: {
+      Parts: sortedParts
+    }
+  });
+
+  const response = await s3.send(command);
+  return response;
+};
+
+import { exec } from 'child_process';
+import util from 'util';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+
+const execPromise = util.promisify(exec);
+
+/**
+ * Downloads a video from R2, transcodes its audio stream to AAC (copying video stream),
+ * and uploads it back to R2, overwriting the original file.
+ */
+export const transcodeAudioToAAC = async (key) => {
+  if (!process.env.CLOUDFLARE_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
+    console.warn('[Transcode Warning] Cloudflare R2 is not fully configured. Skipping audio transcode.');
+    return;
+  }
+
+  // Verify if ffmpeg is installed
+  try {
+    await execPromise('ffmpeg -version');
+  } catch (err) {
+    console.warn('[Transcode Warning] ffmpeg is not installed on this system. Audio transcoding will be skipped.');
+    return;
+  }
+
+  const bucketName = process.env.R2_BUCKET_NAME || 'third-ai-commercials';
+  const tempInPath = path.join(os.tmpdir(), `in_${Date.now()}_${path.basename(key)}`);
+  const tempOutPath = path.join(os.tmpdir(), `out_${Date.now()}_${path.basename(key)}`);
+
+  try {
+    // 1. Download file from R2
+    console.log(`[Transcode] Downloading original R2 video key: ${key}`);
+    const getCommand = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: key
+    });
+    const s3Response = await s3.send(getCommand);
+
+    const { pipeline } = await import('stream/promises');
+    await pipeline(s3Response.Body, fs.createWriteStream(tempInPath));
+
+    // 2. Transcode audio only (copy video stream, encode audio to AAC)
+    console.log(`[Transcode] Starting audio transcoding for R2 key: ${key}`);
+    await execPromise(`ffmpeg -y -i "${tempInPath}" -c:v copy -c:a aac "${tempOutPath}"`);
+    console.log(`[Transcode] Successfully transcoded audio for key: ${key}`);
+
+    // 3. Upload the transcoded file back to R2 (overwrite)
+    const putCommand = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+      Body: fs.createReadStream(tempOutPath),
+      ContentType: 'video/mp4'
+    });
+    await s3.send(putCommand);
+    console.log(`[Transcode] Uploaded transcoded video back to R2 key: ${key}`);
+  } catch (error) {
+    console.error(`[Transcode Error] failed to transcode key ${key}:`, error);
+  } finally {
+    // Clean up temp files
+    try {
+      if (fs.existsSync(tempInPath)) fs.unlinkSync(tempInPath);
+      if (fs.existsSync(tempOutPath)) fs.unlinkSync(tempOutPath);
+    } catch (cleanupErr) {
+      console.warn('[Transcode Warning] Temp file cleanup failed:', cleanupErr.message);
+    }
+  }
 };

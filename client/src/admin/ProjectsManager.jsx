@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { fetchProjects, createProject, updateProject, deleteProject, getPresignedUrl } from '../services/api';
+import { 
+  fetchProjects, 
+  createProject, 
+  updateProject, 
+  deleteProject, 
+  startMultipartUpload, 
+  getMultipartPresignedUrl, 
+  completeMultipartUpload 
+} from '../services/api';
 import { Plus, Trash2, Edit2, Film, Star, Tag, CheckCircle2 } from 'lucide-react';
 
 export default function ProjectsManager() {
@@ -82,57 +90,156 @@ export default function ProjectsManager() {
 
   const uploadToR2Direct = (file) => {
     return new Promise(async (resolve, reject) => {
-      let presignedUrl = '';
+      let uploadId = '';
+      let fileKey = '';
       let publicUrl = '';
 
       try {
-        const response = await getPresignedUrl({
+        // Step 1: Start Multipart Upload on Server
+        const startRes = await startMultipartUpload({
           fileName: file.name,
           fileType: file.type
         });
-        
-        if (response.data.success) {
-          presignedUrl = response.data.presignedUrl;
-          publicUrl = response.data.publicUrl;
+
+        if (startRes.data.success) {
+          uploadId = startRes.data.uploadId;
+          fileKey = startRes.data.key;
+          publicUrl = startRes.data.publicUrl;
         } else {
-          return reject(new Error('Failed to generate presigned upload URL from server.'));
+          return reject(new Error('Failed to initialize multipart session on server.'));
         }
       } catch (err) {
-        return reject(new Error(err.response?.data?.message || err.message || 'Failed to connect to backend for presigned URL.'));
+        return reject(new Error(err.response?.data?.message || err.message || 'Failed to connect to backend for upload.'));
       }
 
       setUploadingToCloudinary(true);
       setUploadProgress(0);
 
-      const xhr = new XMLHttpRequest();
-      xhr.open('PUT', presignedUrl, true);
-      xhr.setRequestHeader('Content-Type', file.type);
+      const chunkSize = 10 * 1024 * 1024; // 10MB chunks
+      const totalSize = file.size;
+      const totalParts = Math.ceil(totalSize / chunkSize);
+      
+      const uploadedParts = [];
+      const partsProgress = {}; // key: partNum, value: bytesLoaded
+      let partsRemaining = Array.from({ length: totalParts }, (_, i) => i + 1);
+      let failed = false;
+      let activeUploadsCount = 0;
 
-      // Track progress
-      xhr.upload.onprogress = (progressEvent) => {
-        if (progressEvent.lengthComputable) {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setUploadProgress(percentCompleted);
-        }
+      const concurrencyLimit = 3; // Upload 3 chunks in parallel to saturate bandwidth
+
+      const onChunkProgress = (partNum, bytesLoaded) => {
+        partsProgress[partNum] = bytesLoaded;
+        const totalLoaded = Object.values(partsProgress).reduce((sum, val) => sum + val, 0);
+        const overallPercent = Math.round((totalLoaded * 100) / totalSize);
+        setUploadProgress(Math.min(overallPercent, 99)); // Cap at 99% until fully completed and assembled
       };
 
-      xhr.onload = () => {
-        setUploadingToCloudinary(false);
-        if (xhr.status === 200 || xhr.status === 201) {
-          resolve({
-            secure_url: publicUrl
+      const startNextWorker = async () => {
+        if (failed || partsRemaining.length === 0) {
+          // Complete upload if all parts are finished and no errors occurred
+          if (activeUploadsCount === 0 && !failed) {
+            try {
+              const completeRes = await completeMultipartUpload({
+                key: fileKey,
+                uploadId,
+                parts: uploadedParts
+              });
+
+              if (completeRes.data.success) {
+                setUploadProgress(100);
+                setUploadingToCloudinary(false);
+                resolve({
+                  secure_url: publicUrl
+                });
+              } else {
+                reject(new Error('Failed to assemble video parts on the server.'));
+              }
+            } catch (completeErr) {
+              setUploadingToCloudinary(false);
+              reject(new Error(completeErr.response?.data?.message || completeErr.message || 'Failed to complete multipart assembly.'));
+            }
+          }
+          return;
+        }
+
+        const partNum = partsRemaining.shift();
+        activeUploadsCount++;
+
+        const startBytes = (partNum - 1) * chunkSize;
+        const endBytes = Math.min(startBytes + chunkSize, totalSize);
+        const chunkBlob = file.slice(startBytes, endBytes);
+
+        let partPresignedUrl = '';
+        try {
+          const partRes = await getMultipartPresignedUrl({
+            key: fileKey,
+            uploadId,
+            partNumber: partNum
           });
-        } else {
-          reject(new Error(`Storage server responded with status ${xhr.status}`));
+          if (partRes.data.success) {
+            partPresignedUrl = partRes.data.presignedUrl;
+          } else {
+            throw new Error('Failed to sign part upload.');
+          }
+        } catch (err) {
+          failed = true;
+          setUploadingToCloudinary(false);
+          return reject(new Error(`Error signing part ${partNum}: ${err.message}`));
         }
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', partPresignedUrl, true);
+        xhr.setRequestHeader('Content-Type', file.type);
+
+        xhr.upload.onprogress = (progressEvent) => {
+          if (progressEvent.lengthComputable) {
+            onChunkProgress(partNum, progressEvent.loaded);
+          }
+        };
+
+        xhr.onload = () => {
+          activeUploadsCount--;
+          if (xhr.status === 200 || xhr.status === 201) {
+            let etag = xhr.getResponseHeader('ETag') || xhr.getResponseHeader('etag');
+            
+            if (!etag) {
+              failed = true;
+              setUploadingToCloudinary(false);
+              return reject(new Error('S3 ETag was not returned. Please make sure "ETag" is in your R2 Bucket CORS "ExposeHeaders" settings in Cloudflare.'));
+            }
+
+            uploadedParts.push({
+              ETag: etag,
+              PartNumber: partNum
+            });
+
+            // Ensure the chunk's full size is counted as progress
+            partsProgress[partNum] = endBytes - startBytes;
+
+            // Trigger the next part upload
+            startNextWorker();
+          } else {
+            failed = true;
+            setUploadingToCloudinary(false);
+            reject(new Error(`Failed to upload part ${partNum}. Status: ${xhr.status}`));
+          }
+        };
+
+        xhr.onerror = () => {
+          activeUploadsCount--;
+          failed = true;
+          setUploadingToCloudinary(false);
+          reject(new Error(`Network error occurred during part ${partNum} upload. Please check your connection.`));
+        };
+
+        xhr.send(chunkBlob);
       };
 
-      xhr.onerror = () => {
-        setUploadingToCloudinary(false);
-        reject(new Error('Network error occurred during direct upload to R2. Please check your internet connection or R2 Bucket CORS configuration.'));
-      };
-
-      xhr.send(file);
+      // Spawn initial workers
+      const initialWorkers = Math.min(concurrencyLimit, totalParts);
+      for (let i = 0; i < initialWorkers; i++) {
+        startNextWorker();
+      }
     });
   };
 
@@ -220,11 +327,11 @@ export default function ProjectsManager() {
             <select
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="px-4 py-3 rounded-xl glass-input text-sm font-sans bg-brand-surface text-white"
+              className="px-4 py-3 rounded-xl glass-input text-sm font-sans bg-[#0c0c0c] text-white"
             >
-              <option value="Cinematic AI Commercials">Cinematic AI Commercials</option>
-              <option value="TV Commercials">TV Commercials</option>
-              <option value="Product Animations">Product Animations</option>
+              <option value="Cinematic AI Commercials" className="bg-[#0c0c0c] text-white">Cinematic AI Commercials</option>
+              <option value="TV Commercials" className="bg-[#0c0c0c] text-white">TV Commercials</option>
+              <option value="Product Animations" className="bg-[#0c0c0c] text-white">Product Animations</option>
             </select>
 
             <input

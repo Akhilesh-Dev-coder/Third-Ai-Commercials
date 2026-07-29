@@ -26,6 +26,9 @@ export const fetchProjectById = (id) => api.get(`/projects/${id}`);
 export const getCloudinaryConfig = () => api.get('/projects/cloudinary-config');
 export const getCloudinarySignature = () => api.get('/projects/cloudinary-signature');
 export const getPresignedUrl = (payload) => api.post('/projects/presigned-url', payload);
+export const startMultipartUpload = (payload) => api.post('/projects/multipart/start', payload);
+export const getMultipartPresignedUrl = (payload) => api.post('/projects/multipart/presigned-url', payload);
+export const completeMultipartUpload = (payload) => api.post('/projects/multipart/complete', payload);
 export const createProject = (formData) => api.post('/projects', formData, {
   headers: { 'Content-Type': 'multipart/form-data' }
 });

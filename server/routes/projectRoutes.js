@@ -9,7 +9,7 @@ import {
 import { protect } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/uploadMiddleware.js';
 import cloudinary from '../config/cloudinary.js';
-import { generatePresignedUrl } from '../services/r2Service.js';
+import { generatePresignedUrl, startMultipartUpload, getMultipartPresignedUrl, completeMultipartUpload } from '../services/r2Service.js';
 
 const router = express.Router();
 
@@ -60,6 +60,48 @@ router.post('/presigned-url', protect, async (req, res) => {
   } catch (error) {
     console.error('Presigned URL Error:', error);
     res.status(500).json({ success: false, message: error.message || 'Failed to generate presigned upload URL.' });
+  }
+});
+
+router.post('/multipart/start', protect, async (req, res) => {
+  const { fileName, fileType } = req.body;
+  if (!fileName || !fileType) {
+    return res.status(400).json({ success: false, message: 'fileName and fileType are required.' });
+  }
+  try {
+    const data = await startMultipartUpload(fileName, fileType);
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Multipart Start Error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to start multipart upload.' });
+  }
+});
+
+router.post('/multipart/presigned-url', protect, async (req, res) => {
+  const { key, uploadId, partNumber } = req.body;
+  if (!key || !uploadId || !partNumber) {
+    return res.status(400).json({ success: false, message: 'key, uploadId, and partNumber are required.' });
+  }
+  try {
+    const presignedUrl = await getMultipartPresignedUrl(key, uploadId, partNumber);
+    res.json({ success: true, presignedUrl });
+  } catch (error) {
+    console.error('Multipart Part Sign Error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to generate part presigned URL.' });
+  }
+});
+
+router.post('/multipart/complete', protect, async (req, res) => {
+  const { key, uploadId, parts } = req.body;
+  if (!key || !uploadId || !Array.isArray(parts)) {
+    return res.status(400).json({ success: false, message: 'key, uploadId, and parts array are required.' });
+  }
+  try {
+    const result = await completeMultipartUpload(key, uploadId, parts);
+    res.json({ success: true, result });
+  } catch (error) {
+    console.error('Multipart Complete Error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to complete multipart upload.' });
   }
 });
 
