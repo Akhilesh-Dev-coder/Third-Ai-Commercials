@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, Lock, Mail, ArrowRight, Sparkles, Key } from 'lucide-react';
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState('admin@thirdai.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
