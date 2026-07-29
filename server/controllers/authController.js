@@ -18,6 +18,22 @@ export const loginAdmin = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Please provide email and password' });
     }
 
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@thirdai.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+    if (email.toLowerCase() === adminEmail.toLowerCase() && password === adminPassword) {
+      return res.json({
+        success: true,
+        user: {
+          id: 'env_admin_user',
+          name: 'Third AI Admin',
+          email: adminEmail,
+          role: 'admin'
+        },
+        token: generateToken('env_admin_user')
+      });
+    }
+
     if (mongoose.connection.readyState !== 1) {
       const fallbackUser = fallback.getUserByEmail(email);
       if (fallbackUser && bcrypt.compareSync(password, fallbackUser.password)) {
