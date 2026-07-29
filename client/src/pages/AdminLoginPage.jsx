@@ -58,7 +58,7 @@ export default function AdminLoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3.5 rounded-xl glass-input text-sm font-sans"
-              placeholder="admin@thirdai.com"
+              placeholder="Enter email"
             />
           </div>
 
