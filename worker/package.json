@@ -1,0 +1,21 @@
+{
+  "name": "third-ai-worker-backend",
+  "version": "1.0.0",
+  "description": "Serverless edge backend for Third AI Commercials",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.525.0",
+    "@aws-sdk/s3-request-presigner": "^3.525.0",
+    "bcryptjs": "^2.4.3",
+    "hono": "^4.0.8",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.4.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.30.0"
+  }
+}

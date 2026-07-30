@@ -1,0 +1,8 @@
+name = "third-ai-backend"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+compatibility_flags = [ "nodejs_compat" ]
+
+[vars]
+# Env variables will be bound from Cloudflare dashboard or wrangler.secret for production.
+# For local development, wrangler reads from a .dev.vars file in the same directory.
