@@ -89,7 +89,6 @@ export const seedInitialData = async () => {
     }
 
     // Seed Projects
-    await Project.deleteMany({});
     const projectCount = await Project.countDocuments();
     if (projectCount === 0) {
       await Project.insertMany([
