@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 import dotenv from 'dotenv';
 
+import mongoose from 'mongoose';
 import { connectDB } from './config/db.js';
 import { seedInitialData } from './utils/seeder.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -52,6 +53,18 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Static Media Folder for local uploads
 const uploadsDir = path.join(process.cwd(), 'uploads');
 app.use('/uploads', express.static(uploadsDir));
+
+// Database connection middleware for Serverless context
+app.use(async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    try {
+      await connectDB();
+    } catch (err) {
+      console.error('[Database Middleware Error] Connection failed:', err);
+    }
+  }
+  next();
+});
 
 // API Routes
 app.use('/api/auth', authRoutes);
