@@ -34,7 +34,7 @@ export const loginAdmin = async (req, res, next) => {
       });
     }
 
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const fallbackUser = fallback.getUserByEmail(email);
       if (fallbackUser && bcrypt.compareSync(password, fallbackUser.password)) {
         return res.json({

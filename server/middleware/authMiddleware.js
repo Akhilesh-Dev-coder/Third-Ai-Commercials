@@ -21,7 +21,7 @@ export const protect = async (req, res, next) => {
         return next();
       }
 
-      if (mongoose.connection.readyState !== 1) {
+      if (!process.env.MONGO_URI) {
         const fallbackUser = fallback.getUserById(decoded.id);
         if (!fallbackUser) {
           return res.status(401).json({ success: false, message: 'Not authorized, user not found' });

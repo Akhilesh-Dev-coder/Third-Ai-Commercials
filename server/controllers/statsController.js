@@ -4,7 +4,7 @@ import { fallback } from '../utils/fallbackDb.js';
 
 export const getStats = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const stats = fallback.getStats();
       return res.json({ success: true, data: stats });
     }
@@ -26,7 +26,7 @@ export const getStats = async (req, res, next) => {
 
 export const updateStats = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const stats = fallback.updateStats(req.body);
       return res.json({ success: true, data: stats });
     }

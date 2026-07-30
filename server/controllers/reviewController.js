@@ -6,7 +6,7 @@ import { fallback } from '../utils/fallbackDb.js';
 export const getReviews = async (req, res, next) => {
   try {
     const { includeHidden } = req.query;
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       let reviews = fallback.getReviews();
       if (includeHidden !== 'true') {
         reviews = reviews.filter(r => !r.hidden);
@@ -37,7 +37,7 @@ export const createReview = async (req, res, next) => {
       publicId = uploaded.public_id;
     }
 
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const newReview = fallback.createReview({
         name,
         company,
@@ -69,7 +69,7 @@ export const updateReview = async (req, res, next) => {
   try {
     const { name, company, rating, review, hidden, customerImage } = req.body;
 
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       let reviewItem = fallback.getReviews().find(r => r._id === req.params.id);
       if (!reviewItem) return res.status(404).json({ success: false, message: 'Review not found' });
 
@@ -119,7 +119,7 @@ export const updateReview = async (req, res, next) => {
 
 export const toggleHideReview = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       let reviewItem = fallback.getReviews().find(r => r._id === req.params.id);
       if (!reviewItem) return res.status(404).json({ success: false, message: 'Review not found' });
 
@@ -141,7 +141,7 @@ export const toggleHideReview = async (req, res, next) => {
 
 export const deleteReview = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const reviewItem = fallback.getReviews().find(r => r._id === req.params.id);
       if (!reviewItem) return res.status(404).json({ success: false, message: 'Review not found' });
 

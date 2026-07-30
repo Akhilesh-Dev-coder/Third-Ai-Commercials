@@ -5,7 +5,7 @@ import { fallback } from '../utils/fallbackDb.js';
 
 export const getCEOs = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const ceos = fallback.getCEOs();
       return res.json({ success: true, count: ceos.length, data: ceos });
     }
@@ -29,7 +29,7 @@ export const createCEO = async (req, res, next) => {
       publicId = uploaded.public_id;
     }
 
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const ceo = fallback.createCEO({
         name,
         position,
@@ -62,7 +62,7 @@ export const updateCEO = async (req, res, next) => {
   try {
     const { name, position, bio, linkedin, order, image } = req.body;
 
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       let ceo = fallback.getCEOs().find(c => c._id === req.params.id);
       if (!ceo) return res.status(404).json({ success: false, message: 'CEO profile not found' });
 
@@ -112,7 +112,7 @@ export const updateCEO = async (req, res, next) => {
 
 export const deleteCEO = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const ceo = fallback.getCEOs().find(c => c._id === req.params.id);
       if (!ceo) return res.status(404).json({ success: false, message: 'CEO profile not found' });
 

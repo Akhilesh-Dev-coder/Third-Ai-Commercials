@@ -4,7 +4,7 @@ import { fallback } from '../utils/fallbackDb.js';
 
 export const getContacts = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const contacts = fallback.getContacts();
       return res.json({ success: true, count: contacts.length, data: contacts });
     }
@@ -23,7 +23,7 @@ export const createContact = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Name, email, and message are required' });
     }
 
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const contact = fallback.createContact({ name, email, phone, business, budget, message });
       return res.status(201).json({
         success: true,
@@ -45,7 +45,7 @@ export const createContact = async (req, res, next) => {
 
 export const markAsContacted = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const contact = fallback.getContacts().find(c => c._id === req.params.id);
       if (!contact) return res.status(404).json({ success: false, message: 'Inquiry not found' });
 
@@ -68,7 +68,7 @@ export const markAsContacted = async (req, res, next) => {
 
 export const deleteContact = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const success = fallback.deleteContact(req.params.id);
       if (!success) return res.status(404).json({ success: false, message: 'Inquiry not found' });
       return res.json({ success: true, message: 'Inquiry deleted successfully' });

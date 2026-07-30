@@ -16,7 +16,7 @@ const extractR2Key = (url) => {
 export const getProjects = async (req, res, next) => {
   try {
     const { category, featured } = req.query;
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const projects = fallback.getProjects(category, featured);
       return res.json({ success: true, count: projects.length, data: projects });
     }
@@ -34,7 +34,7 @@ export const getProjects = async (req, res, next) => {
 
 export const getProjectById = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const project = fallback.getProjectById(req.params.id);
       if (!project) {
         return res.status(404).json({ success: false, message: 'Project not found' });
@@ -87,7 +87,7 @@ export const createProject = async (req, res, next) => {
       });
     }
 
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const project = fallback.createProject({
         title,
         description,
@@ -130,7 +130,7 @@ export const updateProject = async (req, res, next) => {
   try {
     const { title, description, category, client, technology, featured, liveUrl, githubUrl, videoUrl, thumbnailUrl } = req.body;
 
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       let project = fallback.getProjectById(req.params.id);
       if (!project) {
         return res.status(404).json({ success: false, message: 'Project not found' });
@@ -236,7 +236,7 @@ export const updateProject = async (req, res, next) => {
 
 export const deleteProject = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const project = fallback.getProjectById(req.params.id);
       if (!project) {
         return res.status(404).json({ success: false, message: 'Project not found' });

@@ -4,7 +4,7 @@ import { fallback } from '../utils/fallbackDb.js';
 
 export const getServices = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const services = fallback.getServices();
       return res.json({ success: true, count: services.length, data: services });
     }
@@ -19,7 +19,7 @@ export const getServices = async (req, res, next) => {
 export const createService = async (req, res, next) => {
   try {
     const { title, description, icon, cta, order } = req.body;
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const service = fallback.createService({ title, description, icon, cta, order });
       return res.status(201).json({ success: true, data: service });
     }
@@ -33,7 +33,7 @@ export const createService = async (req, res, next) => {
 
 export const updateService = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const service = fallback.updateService(req.params.id, req.body);
       if (!service) return res.status(404).json({ success: false, message: 'Service not found' });
       return res.json({ success: true, data: service });
@@ -49,7 +49,7 @@ export const updateService = async (req, res, next) => {
 
 export const deleteService = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!process.env.MONGO_URI) {
       const success = fallback.deleteService(req.params.id);
       if (!success) return res.status(404).json({ success: false, message: 'Service not found' });
       return res.json({ success: true, message: 'Service deleted successfully' });
