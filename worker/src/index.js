@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { sign, verify } from 'hono/jwt';
 import { ObjectId } from 'mongodb';
-import { getCollection } from './db.js';
+import { getCollection, setGlobalEnv } from './db.js';
 import { 
   startMultipartUpload, 
   getMultipartPresignedUrl, 
@@ -15,6 +15,12 @@ import {
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 const app = new Hono();
+
+// Bind environment variables to global database configuration on each request
+app.use('*', async (c, next) => {
+  setGlobalEnv(c.env);
+  await next();
+});
 
 // CORS configuration matching express configuration
 app.use('*', cors({
