@@ -75,13 +75,18 @@ app.get('/api/health', (req, res) => {
 app.use(errorHandler);
 
 // Connect Database & Start Server
-connectDB().then(async (conn) => {
-  if (conn) {
-    await seedInitialData();
-  }
-  app.listen(PORT, () => {
-    console.log(`[Third AI Server] Running on http://localhost:${PORT}`);
+if (process.env.VERCEL) {
+  // In Vercel serverless functions, just connect to DB
+  connectDB();
+} else {
+  connectDB().then(async (conn) => {
+    if (conn) {
+      await seedInitialData();
+    }
+    app.listen(PORT, () => {
+      console.log(`[Third AI Server] Running on http://localhost:${PORT}`);
+    });
   });
-});
+}
 
 export default app;
