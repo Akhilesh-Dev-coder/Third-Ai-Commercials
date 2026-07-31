@@ -3,7 +3,7 @@ import { X, Volume2, VolumeX, Play, Pause, Film, Tv, Box } from 'lucide-react';
 
 export default function CategoryVideoPlayerModal({ category, projects = [], onClose }) {
   const [activeIdx, setActiveIdx] = useState(0);
-  const [isMuted, setIsMuted] = useState(false); // Start unmuted by default when clicked
+  const [isMuted, setIsMuted] = useState(true); // Start muted by default to support iOS Safari autoplay guidelines
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   
@@ -187,6 +187,7 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
                     poster={proj.thumbnailUrl}
                     loop
                     playsInline
+                    muted={isMuted}
                     preload={isActive ? "auto" : "metadata"}
                     onClick={togglePlay}
                     className="w-full h-full object-contain relative z-10"
@@ -252,6 +253,7 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
               loop
               playsInline
               preload="auto"
+              muted={isMuted}
               className="w-full h-full object-contain relative z-10"
             />
 

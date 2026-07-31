@@ -256,7 +256,7 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
 export default function VideoVault() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeReelIndex, setActiveReelIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   const handleOpenReels = (key) => {
     setActiveCategory(key);
