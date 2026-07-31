@@ -190,12 +190,12 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
                 {/* Background Video */}
                 <video
                   ref={(el) => (mobileVideoRefs.current[idx] = el)}
-                  src={isActive ? proj.videoUrl : ''}
+                  src={proj.videoUrl}
                   poster={proj.thumbnailUrl}
                   loop
                   playsInline
                   muted={isMuted}
-                  preload={isActive ? "auto" : "none"}
+                  preload={isActive ? "auto" : "metadata"}
                   onClick={togglePlay}
                   className={`w-full h-full object-contain relative z-10 transition-opacity duration-300 ${
                     isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'

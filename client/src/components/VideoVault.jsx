@@ -220,11 +220,11 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
 
       <video
         ref={videoRef}
-        src={isActive ? videoUrl : ''}
+        src={videoUrl}
         muted={isMuted}
         loop
         playsInline
-        preload={isActive ? "auto" : "none"}
+        preload={isActive ? "auto" : "metadata"}
         className={`w-full h-full object-cover relative z-10 transition-opacity duration-300 ${
           isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
