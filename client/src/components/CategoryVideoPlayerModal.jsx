@@ -55,10 +55,6 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
           if (idx === activeIdx) {
             ref.muted = isMuted;
             if (isPlaying) {
-              // Reset only active video when it begins playing (avoid resetting others)
-              if (ref.readyState >= 1) {
-                ref.currentTime = 0;
-              }
               ref.play()
                 .then(() => {
                   ref.muted = isMuted;
@@ -192,29 +188,19 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
                 />
 
                 {/* Background Video */}
-                {Math.abs(idx - activeIdx) <= 1 ? (
-                  <video
-                    ref={(el) => (mobileVideoRefs.current[idx] = el)}
-                    src={proj.videoUrl}
-                    poster={proj.thumbnailUrl}
-                    loop
-                    playsInline
-                    muted={isMuted}
-                    preload={idx === activeIdx ? "auto" : "metadata"}
-                    onClick={togglePlay}
-                    className="w-full h-full object-contain relative z-10"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
-                    {proj.thumbnailUrl && (
-                      <img
-                        src={proj.thumbnailUrl}
-                        alt=""
-                        className="w-full h-full object-contain opacity-40 blur-[2px]"
-                      />
-                    )}
-                  </div>
-                )}
+                <video
+                  ref={(el) => (mobileVideoRefs.current[idx] = el)}
+                  src={isActive ? proj.videoUrl : ''}
+                  poster={proj.thumbnailUrl}
+                  loop
+                  playsInline
+                  muted={isMuted}
+                  preload={isActive ? "auto" : "none"}
+                  onClick={togglePlay}
+                  className={`w-full h-full object-contain relative z-10 transition-opacity duration-300 ${
+                    isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                  }`}
+                />
 
                 {/* Scrim Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent opacity-90 pointer-events-none" />

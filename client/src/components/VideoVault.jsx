@@ -190,15 +190,11 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
   const posterUrl = getVideoPoster(video.categoryDir, video.file);
   const videoUrl = getVideoUrl(video.categoryDir, video.file);
 
-  const isLoaded = Math.abs(activeIndex - index) <= 1;
+  const isActive = activeIndex === index;
 
   useEffect(() => {
     if (!videoRef.current) return;
-    if (activeIndex === index) {
-      // Seek only active video to 0 on focus
-      if (videoRef.current.readyState >= 1) {
-        videoRef.current.currentTime = 0;
-      }
+    if (isActive) {
       videoRef.current
         .play()
         .then(() => setIsPlaying(true))
@@ -209,7 +205,7 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
       }
       setIsPlaying(false);
     }
-  }, [activeIndex, index]);
+  }, [isActive]);
 
   return (
     <div className="relative w-full h-full flex-none snap-start overflow-hidden bg-black flex items-center justify-center">
@@ -222,27 +218,17 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
         }}
       />
 
-      {isLoaded ? (
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          muted={isMuted}
-          loop
-          playsInline
-          preload={activeIndex === index ? "auto" : "metadata"}
-          className="w-full h-full object-cover relative z-10"
-        />
-      ) : (
-        <div className="w-full h-full bg-black/60 flex items-center justify-center z-10">
-          {posterUrl && (
-            <img 
-              src={posterUrl} 
-              alt="" 
-              className="w-full h-full object-cover opacity-40 blur-[2px]" 
-            />
-          )}
-        </div>
-      )}
+      <video
+        ref={videoRef}
+        src={isActive ? videoUrl : ''}
+        muted={isMuted}
+        loop
+        playsInline
+        preload={isActive ? "auto" : "none"}
+        className={`w-full h-full object-cover relative z-10 transition-opacity duration-300 ${
+          isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      />
 
       {/* Info Hud */}
       <div className="absolute left-0 right-0 bottom-0 p-6 z-20 bg-gradient-to-t from-black via-black/50 to-transparent">
