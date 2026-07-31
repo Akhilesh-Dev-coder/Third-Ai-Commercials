@@ -200,8 +200,12 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
         .then(() => setIsPlaying(true))
         .catch(() => {});
     } else {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
+      if (!videoRef.current.paused) {
+        videoRef.current.pause();
+      }
+      if (videoRef.current.currentTime !== 0) {
+        videoRef.current.currentTime = 0;
+      }
       setIsPlaying(false);
     }
   }, [activeIndex, index]);
@@ -217,17 +221,15 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
         }}
       />
 
-      {isLoaded && (
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          muted={isMuted}
-          loop
-          playsInline
-          preload={activeIndex === index ? "auto" : "metadata"}
-          className="w-full h-full object-cover relative z-10"
-        />
-      )}
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        muted={isMuted}
+        loop
+        playsInline
+        preload={activeIndex === index ? "auto" : (Math.abs(activeIndex - index) <= 1 ? "metadata" : "none")}
+        className="w-full h-full object-cover relative z-10"
+      />
 
       {/* Info Hud */}
       <div className="absolute left-0 right-0 bottom-0 p-6 z-20 bg-gradient-to-t from-black via-black/50 to-transparent">
