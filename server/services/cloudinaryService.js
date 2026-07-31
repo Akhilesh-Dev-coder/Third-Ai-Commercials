@@ -1,5 +1,9 @@
 import cloudinary from '../config/cloudinary.js';
 import fs from 'fs';
+import { exec } from 'child_process';
+import util from 'util';
+
+const execPromise = util.promisify(exec);
 
 export const uploadMediaToCloudinary = async (filePath, folder = 'third-ai-commercials', resourceType = 'auto') => {
   try {
@@ -21,6 +25,29 @@ export const uploadMediaToCloudinary = async (filePath, folder = 'third-ai-comme
 
   // Fallback to local server static path
   const filename = filePath.split('/').pop().split('\\').pop();
+  const fileExt = filename.split('.').pop().toLowerCase();
+  
+  if (resourceType === 'video' || ['mp4', 'mov', 'avi', 'webm', 'mkv'].includes(fileExt)) {
+    const tempCompressedPath = filePath.replace(/\.[^/.]+$/, "") + "_compressed.mp4";
+    try {
+      console.log(`[Video Optimizer] Compressing local video fallback: ${filePath} -> ${tempCompressedPath}...`);
+      // Run ffmpeg compression: h264, crf 26, 96k AAC audio, faststart
+      await execPromise(`ffmpeg -y -i "${filePath}" -vcodec libx264 -crf 26 -preset fast -b:a 96k -movflags +faststart "${tempCompressedPath}"`);
+      
+      // Replace original file with compressed one
+      if (fs.existsSync(tempCompressedPath)) {
+        fs.unlinkSync(filePath); // delete original large file
+        fs.renameSync(tempCompressedPath, filePath); // rename compressed to original path name
+        console.log(`[Video Optimizer] Successfully compressed local upload: ${filename}`);
+      }
+    } catch (err) {
+      console.error(`[Video Optimizer Error] FFMPEG compression failed: ${err.message}`);
+      if (fs.existsSync(tempCompressedPath)) {
+        fs.unlinkSync(tempCompressedPath);
+      }
+    }
+  }
+
   return {
     secure_url: `/uploads/${filename}`,
     public_id: `local_${Date.now()}`
