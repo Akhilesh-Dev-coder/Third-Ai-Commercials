@@ -180,15 +180,18 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
                 />
 
                 {/* Background Video */}
-                <video
-                  ref={(el) => (mobileVideoRefs.current[idx] = el)}
-                  src={proj.videoUrl}
-                  poster={proj.thumbnailUrl}
-                  loop
-                  playsInline
-                  onClick={togglePlay}
-                  className="w-full h-full object-contain relative z-10"
-                />
+                {Math.abs(idx - activeIdx) <= 1 && (
+                  <video
+                    ref={(el) => (mobileVideoRefs.current[idx] = el)}
+                    src={proj.videoUrl}
+                    poster={proj.thumbnailUrl}
+                    loop
+                    playsInline
+                    preload={isActive ? "auto" : "metadata"}
+                    onClick={togglePlay}
+                    className="w-full h-full object-contain relative z-10"
+                  />
+                )}
 
                 {/* Scrim Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent opacity-90 pointer-events-none" />
@@ -248,6 +251,7 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
               poster={activeProject.thumbnailUrl}
               loop
               playsInline
+              preload="auto"
               className="w-full h-full object-contain relative z-10"
             />
 

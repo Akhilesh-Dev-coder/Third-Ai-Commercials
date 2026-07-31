@@ -156,9 +156,9 @@ export const transcodeAudioToAAC = async (key) => {
     const { pipeline } = await import('stream/promises');
     await pipeline(s3Response.Body, fs.createWriteStream(tempInPath));
 
-    // 2. Transcode audio only (copy video stream, encode audio to AAC)
+    // 2. Transcode audio only (copy video stream, encode audio to AAC, and enable faststart for fast web playback)
     console.log(`[Transcode] Starting audio transcoding for R2 key: ${key}`);
-    await execPromise(`ffmpeg -y -i "${tempInPath}" -c:v copy -c:a aac "${tempOutPath}"`);
+    await execPromise(`ffmpeg -y -i "${tempInPath}" -c:v copy -c:a aac -movflags +faststart "${tempOutPath}"`);
     console.log(`[Transcode] Successfully transcoded audio for key: ${key}`);
 
     // 3. Upload the transcoded file back to R2 (overwrite)

@@ -22,6 +22,8 @@ export default function ProjectModal({ project, onClose }) {
             poster={project.thumbnailUrl}
             controls
             autoPlay
+            playsInline
+            preload="auto"
             className="w-full h-full object-contain"
           >
             Your browser does not support HTML5 video.

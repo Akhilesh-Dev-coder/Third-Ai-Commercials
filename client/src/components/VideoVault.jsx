@@ -224,6 +224,7 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
           muted={isMuted}
           loop
           playsInline
+          preload={activeIndex === index ? "auto" : "metadata"}
           className="w-full h-full object-cover relative z-10"
         />
       )}
