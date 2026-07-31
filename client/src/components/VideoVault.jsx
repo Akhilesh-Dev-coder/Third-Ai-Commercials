@@ -196,7 +196,9 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
     if (!videoRef.current) return;
     if (activeIndex === index) {
       // Seek only active video to 0 on focus
-      videoRef.current.currentTime = 0;
+      if (videoRef.current.readyState >= 1) {
+        videoRef.current.currentTime = 0;
+      }
       videoRef.current
         .play()
         .then(() => setIsPlaying(true))
@@ -220,15 +222,27 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
         }}
       />
 
-      <video
-        ref={videoRef}
-        src={Math.abs(activeIndex - index) <= 1 ? videoUrl : ''}
-        muted={isMuted}
-        loop
-        playsInline
-        preload={activeIndex === index ? "auto" : "metadata"}
-        className="w-full h-full object-cover relative z-10"
-      />
+      {isLoaded ? (
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          muted={isMuted}
+          loop
+          playsInline
+          preload={activeIndex === index ? "auto" : "metadata"}
+          className="w-full h-full object-cover relative z-10"
+        />
+      ) : (
+        <div className="w-full h-full bg-black/60 flex items-center justify-center z-10">
+          {posterUrl && (
+            <img 
+              src={posterUrl} 
+              alt="" 
+              className="w-full h-full object-cover opacity-40 blur-[2px]" 
+            />
+          )}
+        </div>
+      )}
 
       {/* Info Hud */}
       <div className="absolute left-0 right-0 bottom-0 p-6 z-20 bg-gradient-to-t from-black via-black/50 to-transparent">
@@ -258,10 +272,17 @@ export default function VideoVault() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeReelIndex, setActiveReelIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const scrollTimeoutRef = useRef(null);
 
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
     return () => {
+      window.removeEventListener('resize', handleResize);
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
@@ -319,8 +340,18 @@ export default function VideoVault() {
 
       {/* Fullscreen Smartphone Emulator Reels Modal */}
       {activeCategory && (
-        <div className="fixed inset-0 z-[999] bg-[#050507]/98 flex items-center justify-center p-4 sm:p-6">
-          <div className="relative w-full max-w-[400px] h-[85vh] rounded-[40px] border-4 border-white/20 bg-black overflow-hidden shadow-2xl flex flex-col">
+        <div 
+          className={`fixed inset-0 z-[999] bg-black flex items-center justify-center ${
+            isMobile ? 'p-0' : 'bg-[#050507]/98 p-4 sm:p-6'
+          }`}
+        >
+          <div 
+            className={`relative w-full bg-black overflow-hidden flex flex-col ${
+              isMobile 
+                ? 'h-[100dvh] rounded-none border-none' 
+                : 'max-w-[400px] h-[85vh] rounded-[40px] border-4 border-white/20 shadow-2xl'
+            }`}
+          >
             {/* Top Counter & Close */}
             <div className="absolute top-4 left-4 z-30 font-mono text-xs text-white bg-black/60 px-3 py-1 rounded-full border border-white/10">
               {activeReelIndex + 1} / {reelsList.length}
