@@ -48,9 +48,11 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
       // Mobile snaps multiple video elements
       mobileVideoRefs.current.forEach((ref, idx) => {
         if (ref) {
-          ref.muted = isMuted;
           if (idx === activeIdx) {
+            ref.muted = isMuted;
             if (isPlaying) {
+              // Reset only active video when it begins playing (avoid resetting others)
+              ref.currentTime = 0;
               ref.play()
                 .then(() => {
                   ref.muted = isMuted;
@@ -61,7 +63,6 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
             }
           } else {
             if (!ref.paused) ref.pause();
-            if (ref.currentTime !== 0) ref.currentTime = 0;
           }
         }
       });
@@ -86,11 +87,10 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
   // Handle dynamic volume changes (fixes React's video muted attribute bug in Chrome/Safari)
   useEffect(() => {
     if (isMobile) {
-      mobileVideoRefs.current.forEach((ref) => {
-        if (ref) {
-          ref.muted = isMuted;
-        }
-      });
+      const activeRef = mobileVideoRefs.current[activeIdx];
+      if (activeRef) {
+        activeRef.muted = isMuted;
+      }
     } else {
       const ref = laptopVideoRef.current;
       if (ref) {
@@ -182,12 +182,12 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
                 {/* Background Video */}
                 <video
                   ref={(el) => (mobileVideoRefs.current[idx] = el)}
-                  src={proj.videoUrl}
+                  src={Math.abs(idx - activeIdx) <= 1 ? proj.videoUrl : ''}
                   poster={proj.thumbnailUrl}
                   loop
                   playsInline
                   muted={isMuted}
-                  preload={idx === activeIdx ? "auto" : (Math.abs(idx - activeIdx) <= 1 ? "metadata" : "none")}
+                  preload={idx === activeIdx ? "auto" : "metadata"}
                   onClick={togglePlay}
                   className="w-full h-full object-contain relative z-10"
                 />

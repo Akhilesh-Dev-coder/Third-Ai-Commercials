@@ -195,6 +195,8 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
   useEffect(() => {
     if (!videoRef.current) return;
     if (activeIndex === index) {
+      // Seek only active video to 0 on focus
+      videoRef.current.currentTime = 0;
       videoRef.current
         .play()
         .then(() => setIsPlaying(true))
@@ -202,9 +204,6 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
     } else {
       if (!videoRef.current.paused) {
         videoRef.current.pause();
-      }
-      if (videoRef.current.currentTime !== 0) {
-        videoRef.current.currentTime = 0;
       }
       setIsPlaying(false);
     }
@@ -223,11 +222,11 @@ function ReelFeedSlide({ video, index, activeIndex, isMuted, onMuteToggle }) {
 
       <video
         ref={videoRef}
-        src={videoUrl}
+        src={Math.abs(activeIndex - index) <= 1 ? videoUrl : ''}
         muted={isMuted}
         loop
         playsInline
-        preload={activeIndex === index ? "auto" : (Math.abs(activeIndex - index) <= 1 ? "metadata" : "none")}
+        preload={activeIndex === index ? "auto" : "metadata"}
         className="w-full h-full object-cover relative z-10"
       />
 
