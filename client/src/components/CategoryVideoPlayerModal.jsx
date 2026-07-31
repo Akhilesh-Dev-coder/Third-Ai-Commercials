@@ -9,6 +9,7 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
   
   const mobileVideoRefs = useRef([]);
   const laptopVideoRef = useRef(null);
+  const scrollTimeoutRef = useRef(null);
 
   // Filter projects by category
   const filteredProjects = projects.filter(
@@ -38,6 +39,9 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
       document.body.style.overflow = originalStyle;
       if (navbar) {
         navbar.style.display = '';
+      }
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
       }
     };
   }, []);
@@ -122,9 +126,15 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
     const scrollTop = e.currentTarget.scrollTop;
     const clientHeight = e.currentTarget.clientHeight;
     const index = Math.round(scrollTop / clientHeight);
+    
     if (index !== activeIdx && index >= 0 && index < filteredProjects.length) {
-      setActiveIdx(index);
-      setIsPlaying(true);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      scrollTimeoutRef.current = setTimeout(() => {
+        setActiveIdx(index);
+        setIsPlaying(true);
+      }, 150); // Debounce to allow scroll animations to settle smoothly
     }
   };
 
@@ -142,7 +152,7 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
   };
 
   return (
-    <div className="fixed inset-0 z-[999] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-0 md:p-6 select-none animate-fadeIn">
+    <div className="fixed inset-0 z-[999] bg-[#050507]/98 flex flex-col items-center justify-center p-0 md:p-6 select-none animate-fadeIn">
       {/* Category Tag Badge - Top Left */}
       <div className="absolute top-4 left-4 z-[1001] bg-black/70 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/10 flex items-center gap-2 shadow-2xl">
         <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />

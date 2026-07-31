@@ -258,6 +258,15 @@ export default function VideoVault() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeReelIndex, setActiveReelIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
+  const scrollTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleOpenReels = (key) => {
     setActiveCategory(key);
@@ -277,8 +286,14 @@ export default function VideoVault() {
     const scrollTop = e.currentTarget.scrollTop;
     const clientHeight = e.currentTarget.clientHeight;
     const index = Math.round(scrollTop / clientHeight);
+    
     if (index !== activeReelIndex && index >= 0 && index < reelsList.length) {
-      setActiveReelIndex(index);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      scrollTimeoutRef.current = setTimeout(() => {
+        setActiveReelIndex(index);
+      }, 150); // Debounce to allow scroll animations to settle smoothly
     }
   };
 
@@ -304,7 +319,7 @@ export default function VideoVault() {
 
       {/* Fullscreen Smartphone Emulator Reels Modal */}
       {activeCategory && (
-        <div className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-2xl flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-[999] bg-[#050507]/98 flex items-center justify-center p-4 sm:p-6">
           <div className="relative w-full max-w-[400px] h-[85vh] rounded-[40px] border-4 border-white/20 bg-black overflow-hidden shadow-2xl flex flex-col">
             {/* Top Counter & Close */}
             <div className="absolute top-4 left-4 z-30 font-mono text-xs text-white bg-black/60 px-3 py-1 rounded-full border border-white/10">
