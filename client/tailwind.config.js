@@ -38,6 +38,7 @@ export default {
         'spin-slow': 'spin 20s linear infinite',
         'shimmer': 'shimmer 2.5s infinite linear',
         'glow-pulse': 'glowPulse 3s infinite ease-in-out',
+        'fadeIn': 'fadeIn 0.4s ease-out forwards',
       },
       keyframes: {
         float: {
@@ -51,6 +52,10 @@ export default {
         glowPulse: {
           '0%, 100%': { opacity: '0.4', filter: 'blur(40px)' },
           '50%': { opacity: '0.8', filter: 'blur(60px)' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
         }
       }
     },

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Volume2, VolumeX, Play, Pause, Film, Tv, Box } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CategoryVideoPlayerModal({ category, projects = [], onClose }) {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -150,7 +151,39 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
   };
 
   return (
-    <div className="fixed inset-0 z-[999] bg-[#050507]/98 flex flex-col items-center justify-center p-0 md:p-6 select-none animate-fadeIn">
+    <div className="fixed inset-0 z-[999] bg-[#050507]/90 backdrop-blur-2xl flex flex-col items-center justify-center p-0 md:p-6 select-none animate-fadeIn">
+      {/* Premium Ambient Background for Laptop Theater View */}
+      {!isMobile && (
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
+          {/* 1. Brand Color Ambient Glow (Slow Pulsing Orbs) */}
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-brand-red/10 blur-[130px] animate-pulse-slow z-0" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-brand-accent/5 blur-[130px] animate-pulse-slow z-0" style={{ animationDelay: '2s' }} />
+
+          {/* 2. Tech Grid overlay matching landing page branding */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_80%,transparent_100%)] opacity-40 z-0" />
+          
+          {/* 3. Subtle animated light sweep/ambient glow behind the card */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[60%] rounded-full bg-brand-red/15 blur-[120px] mix-blend-screen opacity-80" />
+
+          {/* 4. Dynamic Blurred Video Backdrop (Ambient Glow) with Smooth Framer Motion Crossfade */}
+          <AnimatePresence mode="popLayout">
+            <motion.div 
+              key={activeProject.thumbnailUrl}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.28 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8 }}
+              className="absolute inset-0 bg-cover bg-center blur-[120px] scale-110 z-0"
+              style={{ backgroundImage: `url(${activeProject.thumbnailUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=300&auto=format&fit=crop'})` }}
+            />
+          </AnimatePresence>
+
+          {/* 5. Vignette Overlay for Depth & High Contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050507] via-transparent to-[#050507] opacity-90 z-0" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#050507] via-transparent to-[#050507] opacity-90 z-0" />
+        </div>
+      )}
+
       {/* Category Tag Badge - Top Left */}
       <div className="absolute top-4 left-4 z-[1001] bg-black/70 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/10 flex items-center gap-2 shadow-2xl">
         <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
@@ -251,9 +284,9 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
         </div>
       ) : (
         /* ==================== LAPTOP THEATER VIEW ==================== */
-        <div className="w-full max-w-6xl aspect-[16/9.5] bg-black/40 border border-white/10 rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl relative">
+        <div className="w-full max-w-6xl aspect-[16/9.5] bg-brand-surface/40 backdrop-blur-2xl border border-white/10 rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-[0_30px_100px_rgba(0,0,0,0.8),0_0_50px_rgba(255,42,59,0.05)] relative z-10 transition-all duration-500">
           {/* Left Side: Active Video Player & HUD */}
-          <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden group/player">
+          <div className="flex-1 relative bg-black/20 flex items-center justify-center overflow-hidden group/player">
             <video
               ref={laptopVideoRef}
               src={activeProject.videoUrl}
@@ -296,7 +329,7 @@ export default function CategoryVideoPlayerModal({ category, projects = [], onCl
           </div>
 
           {/* Right Side: Scrollable Play List */}
-          <div className="w-full md:w-80 bg-brand-surface border-l border-white/10 flex flex-col">
+          <div className="w-full md:w-80 bg-brand-surface/40 backdrop-blur-xl border-l border-white/10 flex flex-col">
             {/* Sidebar Title */}
             <div className="p-4 border-b border-white/10 flex items-center gap-2 shrink-0">
               <Film className="w-4 h-4 text-brand-red" />
