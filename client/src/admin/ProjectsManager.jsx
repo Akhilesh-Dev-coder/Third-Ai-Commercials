@@ -7,12 +7,14 @@ import {
   deleteProject, 
   startMultipartUpload, 
   getMultipartPresignedUrl, 
-  completeMultipartUpload 
+  completeMultipartUpload,
+  reorderProjects
 } from '../services/api';
-import { Plus, Trash2, Edit2, Film, Star, Tag, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Film, Star, Tag, CheckCircle2, ArrowUp, ArrowDown } from 'lucide-react';
 
 export default function ProjectsManager() {
   const [projects, setProjects] = useState([]);
+  const [activeTabCategory, setActiveTabCategory] = useState('Cinematic AI Commercials');
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
@@ -85,6 +87,39 @@ export default function ProjectsManager() {
       loadProjects();
     } catch (err) {
       alert(err.response?.data?.message || err.message || 'Failed to delete project');
+    }
+  };
+
+  const handleMove = async (filteredIndex, direction) => {
+    const filtered = projects.filter(p => p.category === activeTabCategory);
+    const targetIndex = direction === 'up' ? filteredIndex - 1 : filteredIndex + 1;
+
+    if (targetIndex < 0 || targetIndex >= filtered.length) return;
+
+    const newFiltered = [...filtered];
+    const temp = newFiltered[filteredIndex];
+    newFiltered[filteredIndex] = newFiltered[targetIndex];
+    newFiltered[targetIndex] = temp;
+
+    let filteredCount = 0;
+    const newProjects = projects.map(p => {
+      if (p.category === activeTabCategory) {
+        const item = newFiltered[filteredCount];
+        filteredCount++;
+        return item;
+      }
+      return p;
+    });
+
+    setProjects(newProjects);
+
+    try {
+      const orderIds = newFiltered.map((p) => p._id);
+      await reorderProjects(orderIds);
+    } catch (err) {
+      console.error('Failed to update project order on server:', err);
+      setErrorMsg('Failed to persist the new project order.');
+      loadProjects();
     }
   };
 
@@ -437,11 +472,56 @@ export default function ProjectsManager() {
         </form>
       </div>
 
+      {/* Category Tabs for Sorting */}
+      <div className="mb-6 flex flex-wrap gap-2 border-b border-white/10 pb-4">
+        {['Cinematic AI Commercials', 'TV Commercials', 'Product Animations'].map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => setActiveTabCategory(cat)}
+            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+              activeTabCategory === cat
+                ? 'bg-brand-red text-white shadow-red-glow'
+                : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       {/* Projects List Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {projects.map((p) => (
-          <div key={p._id} className="glass-panel p-5 rounded-3xl border border-white/10 flex flex-col justify-between space-y-4">
-            <div className="flex gap-4">
+        {projects
+          .filter((p) => p.category === activeTabCategory)
+          .map((p, idx, filteredArr) => (
+            <div key={p._id} className="glass-panel p-5 rounded-3xl border border-white/10 flex flex-col justify-between space-y-4">
+              <div className="flex gap-4">
+                {/* Order Controls */}
+                <div className="flex flex-col items-center justify-center gap-1 pr-3 border-r border-white/10 shrink-0">
+                  <button
+                    type="button"
+                    disabled={idx === 0}
+                    onClick={() => handleMove(idx, 'up')}
+                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-gray-400 hover:text-brand-red disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                    title="Move Up"
+                  >
+                    <ArrowUp className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[10px] font-mono font-bold text-gray-400">
+                    {idx + 1}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={idx === filteredArr.length - 1}
+                    onClick={() => handleMove(idx, 'down')}
+                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-gray-400 hover:text-brand-red disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                    title="Move Down"
+                  >
+                    <ArrowDown className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
               <img
                 src={p.thumbnailUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=300&auto=format&fit=crop'}
                 alt={p.title}

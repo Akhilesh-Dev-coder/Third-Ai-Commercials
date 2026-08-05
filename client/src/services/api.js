@@ -36,6 +36,7 @@ export const updateProject = (id, formData) => api.put(`/projects/${id}`, formDa
   headers: { 'Content-Type': 'multipart/form-data' }
 });
 export const deleteProject = (id) => api.delete(`/projects/${id}`);
+export const reorderProjects = (orderIds) => api.put('/projects/reorder', { orderIds });
 
 // Services API
 export const fetchServices = () => api.get('/services');

@@ -4,7 +4,8 @@ import {
   getProjectById,
   createProject,
   updateProject,
-  deleteProject
+  deleteProject,
+  reorderProjects
 } from '../controllers/projectController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/uploadMiddleware.js';
@@ -113,6 +114,8 @@ const cpUpload = upload.fields([
 router.route('/')
   .get(getProjects)
   .post(protect, cpUpload, createProject);
+
+router.put('/reorder', protect, reorderProjects);
 
 router.route('/:id')
   .get(getProjectById)

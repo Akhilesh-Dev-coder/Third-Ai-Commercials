@@ -101,7 +101,8 @@ export const seedInitialData = async () => {
           client: 'Apex Motors Global',
           technology: ['Midjourney v6', 'Sora Engine', 'Runway Gen-2', 'Unreal Engine 5'],
           featured: true,
-          liveUrl: 'https://apexmotors.example.com'
+          liveUrl: 'https://apexmotors.example.com',
+          order: 1
         },
         {
           title: 'Nectar Botanicals - Pure Essence',
@@ -112,7 +113,8 @@ export const seedInitialData = async () => {
           client: 'Nectar Paris',
           technology: ['Stable Diffusion XL', 'ComfyUI', 'Kling AI', 'DaVinci Resolve'],
           featured: true,
-          liveUrl: 'https://nectarparis.example.com'
+          liveUrl: 'https://nectarparis.example.com',
+          order: 2
         },
         {
           title: 'CyberPulse - Spatial Audio Headphones',
@@ -123,7 +125,8 @@ export const seedInitialData = async () => {
           client: 'CyberPulse Audio',
           technology: ['Luma Dream Machine', 'ElevenLabs Audio', 'Topaz AI'],
           featured: true,
-          liveUrl: 'https://cyberpulse.example.com'
+          liveUrl: 'https://cyberpulse.example.com',
+          order: 3
         },
         {
           title: 'Valence Quantum Watch',
@@ -133,7 +136,8 @@ export const seedInitialData = async () => {
           category: 'Product Animations',
           client: 'Valence Horizons',
           technology: ['Pika 1.5', 'Midjourney', 'After Effects 2025'],
-          featured: false
+          featured: false,
+          order: 4
         }
       ]);
       console.log('[Seeder] Default Projects seeded.');

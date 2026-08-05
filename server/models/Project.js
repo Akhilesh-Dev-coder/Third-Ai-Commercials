@@ -13,7 +13,8 @@ const projectSchema = new mongoose.Schema(
     technology: [{ type: String }],
     featured: { type: Boolean, default: false },
     liveUrl: { type: String, default: '' },
-    githubUrl: { type: String, default: '' }
+    githubUrl: { type: String, default: '' },
+    order: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

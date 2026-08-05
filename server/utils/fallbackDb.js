@@ -96,7 +96,8 @@ const initFallbackDB = () => {
           technology: ['Midjourney v6', 'Sora Engine', 'Runway Gen-2', 'Unreal Engine 5'],
           featured: true,
           liveUrl: 'https://apexmotors.example.com',
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          order: 1
         },
         {
           _id: 'proj_2',
@@ -109,7 +110,8 @@ const initFallbackDB = () => {
           technology: ['Stable Diffusion XL', 'ComfyUI', 'Kling AI', 'DaVinci Resolve'],
           featured: true,
           liveUrl: 'https://nectarparis.example.com',
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          order: 2
         },
         {
           _id: 'proj_3',
@@ -122,7 +124,8 @@ const initFallbackDB = () => {
           technology: ['Luma Dream Machine', 'ElevenLabs Audio', 'Topaz AI'],
           featured: true,
           liveUrl: 'https://cyberpulse.example.com',
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          order: 3
         },
         {
           _id: 'proj_4',
@@ -134,7 +137,8 @@ const initFallbackDB = () => {
           client: 'Valence Horizons',
           technology: ['Pika 1.5', 'Midjourney', 'After Effects 2025'],
           featured: false,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          order: 4
         }
       ],
       ceos: [
@@ -213,7 +217,20 @@ export const fallback = {
     if (featured === true || featured === 'true') {
       projs = projs.filter(p => p.featured === true);
     }
-    return projs;
+    return projs.sort((a, b) => {
+      if (!category || category === 'All') {
+        const catA = a.category || '';
+        const catB = b.category || '';
+        const catComp = catA.localeCompare(catB);
+        if (catComp !== 0) return catComp;
+      }
+      const orderA = typeof a.order === 'number' ? a.order : 0;
+      const orderB = typeof b.order === 'number' ? b.order : 0;
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
   },
   getProjectById: (id) => {
     const db = getDB();
@@ -225,12 +242,26 @@ export const fallback = {
       _id: 'proj_' + Math.random().toString(36).substr(2, 9),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      order: data.order !== undefined ? data.order : 0,
       ...data
     };
     if (!db.projects) db.projects = [];
     db.projects.push(newProject);
     saveDB(db);
     return newProject;
+  },
+  reorderProjects: (orderIds) => {
+    const db = getDB();
+    if (!db.projects) db.projects = [];
+    orderIds.forEach((id, index) => {
+      const proj = db.projects.find(p => p._id === id);
+      if (proj) {
+        proj.order = index;
+        proj.updatedAt = new Date().toISOString();
+      }
+    });
+    saveDB(db);
+    return true;
   },
   updateProject: (id, data) => {
     const db = getDB();

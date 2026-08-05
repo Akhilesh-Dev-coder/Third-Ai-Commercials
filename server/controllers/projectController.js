@@ -25,7 +25,7 @@ export const getProjects = async (req, res, next) => {
     if (category && category !== 'All') query.category = category;
     if (featured === 'true') query.featured = true;
 
-    const projects = await Project.find(query).sort({ createdAt: -1 });
+    const projects = await Project.find(query).sort({ category: 1, order: 1, createdAt: -1 });
     res.json({ success: true, count: projects.length, data: projects });
   } catch (error) {
     next(error);
@@ -255,6 +255,32 @@ export const deleteProject = async (req, res, next) => {
 
     await project.deleteOne();
     res.json({ success: true, message: 'Project deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reorderProjects = async (req, res, next) => {
+  try {
+    const { orderIds } = req.body;
+    if (!Array.isArray(orderIds)) {
+      return res.status(400).json({ success: false, message: 'orderIds array is required' });
+    }
+
+    if (!process.env.MONGO_URI) {
+      fallback.reorderProjects(orderIds);
+      return res.json({ success: true, message: 'Projects reordered successfully' });
+    }
+
+    const bulkOps = orderIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: id },
+        update: { $set: { order: index } }
+      }
+    }));
+    await Project.bulkWrite(bulkOps);
+
+    res.json({ success: true, message: 'Projects reordered successfully' });
   } catch (error) {
     next(error);
   }
